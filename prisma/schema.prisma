@@ -1,5 +1,5 @@
-// Life OS — Digital Brain schema
-// Everything is an interconnected "Item" node that can be linked to Projects and to each other.
+// AI Life Coach schema
+// An interconnected digital brain, secure document vault, and 6 specialized AI coaches.
 
 generator client {
   provider = "prisma-client-js"
@@ -15,16 +15,24 @@ model User {
   id           String    @id @default(cuid())
   email        String    @unique
   name         String?
-  passwordHash String
+  passwordHash String?
+  avatarUrl    String?
   totpSecret   String?   // encrypted TOTP secret for 2FA
   totpVerified Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  items        Item[]
+  projects     Project[]
+  documents    Document[]
+  reminders    Reminder[]
+  conversations AICoachConversation[]
+  reviews      Review[]
+  ownedWorkspaces FamilyWorkspace[]
+  memberships  FamilyMember[]
 }
 
-// ─── Life Domains ────────────────────────────────────────────────────────────
-// Eight domains: Mind & Soul, Time & Action, Health & Body, Wealth & Career,
-// Network, Growth, Creativity & Joy, Admin
+// ─── Life Domains (11 Life Categories) ──────────────────────────────────────
 model Domain {
   id          String   @id @default(cuid())
   key         String   @unique
@@ -39,12 +47,11 @@ model Domain {
   createdAt   DateTime @default(now())
 }
 
-// ─── Universal Item (the "Digital Brain" node) ───────────────────────────────
-// A single model represents tasks, notes, journal entries, habits, events,
-// finances, contacts, ideas, goals, documents, bookmarks, milestones, etc.
-// Type-specific data lives in a JSON `metadata` string.
+// ─── Universal Item (Digital Brain node) ───────────────────────────────────
 model Item {
   id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   type        String   // task | note | journal | habit | event | finance | contact | idea | goal | document | bookmark | milestone | routine | symptom | medication | affirmation | vision
   title       String
   content     String?  // markdown / rich text body
@@ -76,16 +83,18 @@ model Item {
 
   @@index([type])
   @@index([status])
+  @@index([userId])
   @@index([domainId])
   @@index([projectId])
   @@index([dueDate])
   @@index([scheduledAt])
 }
 
-// ─── Project / Thread ────────────────────────────────────────────────────────
-// A container that aggregates related items into a unified dashboard.
+// ─── Project / Container ────────────────────────────────────────────────────
 model Project {
   id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   description String?
   color       String   @default("#71717a")
@@ -104,6 +113,139 @@ model Project {
 
   @@index([status])
   @@index([domainId])
+  @@index([userId])
+}
+
+// ─── Document Vault ─────────────────────────────────────────────────────────
+model Document {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  category         String    // 1 of 11 life categories
+  documentType     String    // passport, id_card, medical_record, etc.
+  fileName         String
+  fileSize         Int
+  mimeType         String
+  storagePath      String
+  issueDate        DateTime?
+  expiryDate       DateTime?
+  tags             String?   // JSON string
+  notes            String?
+  extractedText    String?
+  extractionStatus String    @default("pending") // pending | completed | failed | unsupported
+  aiSummary        String?
+  isSensitive      Boolean   @default(true)
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  reminders        Reminder[]
+
+  @@index([userId])
+  @@index([category])
+  @@index([documentType])
+  @@index([expiryDate])
+}
+
+// ─── AI Coach Conversation & Messages ──────────────────────────────────────
+model AICoachConversation {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coachType   String           // health | finance | career | life | hobby | predictive | unified
+  title       String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  messages    AICoachMessage[]
+
+  @@index([userId])
+  @@index([coachType])
+}
+
+model AICoachMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   AICoachConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String              // user | assistant | system
+  content        String
+  metadata       String?             // JSON string
+  createdAt      DateTime            @default(now())
+
+  @@index([conversationId])
+}
+
+// ─── Predictive Reminders & Alerts ──────────────────────────────────────────
+model Reminder {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId      String?
+  item        Item?     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  category    String?
+  type        String    @default("expiry") // expiry | renewal | follow_up | health_check | goal_due | predictive
+  remindAt    DateTime
+  dueDate     DateTime?
+  status      String    @default("pending") // pending | snoozed | completed | dismissed
+  sent        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([remindAt])
+  @@index([status])
+}
+
+// ─── Family Workspaces & Sharing ────────────────────────────────────────────
+model FamilyWorkspace {
+  id          String                 @id @default(cuid())
+  name        String
+  ownerId     String
+  owner       User                   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  members     FamilyMember[]
+  resources   FamilySharedResource[]
+
+  @@index([ownerId])
+}
+
+model FamilyMember {
+  id          String          @id @default(cuid())
+  workspaceId String
+  workspace   FamilyWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email       String
+  role        String          @default("viewer") // owner | admin | contributor | viewer
+  status      String          @default("pending") // pending | active | revoked
+  inviteToken String?         @unique
+  expiresAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model FamilySharedResource {
+  id             String          @id @default(cuid())
+  workspaceId    String
+  workspace      FamilyWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  resourceType   String          // document | item | milestone | calendar
+  resourceId     String
+  sharedByUserId String
+  canEdit        Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+
+  @@index([workspaceId])
 }
 
 // ─── Bi-directional Link ─────────────────────────────────────────────────────
@@ -125,11 +267,11 @@ model Link {
 
 // ─── Tags ────────────────────────────────────────────────────────────────────
 model Tag {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  color     String   @default("#71717a")
+  id        String      @id @default(cuid())
+  name      String      @unique
+  color     String      @default("#71717a")
   items     TagOnItem[]
-  createdAt DateTime @default(now())
+  createdAt DateTime    @default(now())
 }
 
 model TagOnItem {
@@ -158,28 +300,31 @@ model HabitLog {
 
 // ─── Reviews & Reflections ───────────────────────────────────────────────────
 model Review {
-  id         String   @id @default(cuid())
-  type       String   // daily | weekly | monthly
+  id         String       @id @default(cuid())
+  userId     String?
+  user       User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       String       // daily | weekly | monthly
   date       DateTime
-  status     String   @default("completed") // pending | in_progress | completed
+  status     String       @default("completed") // pending | in_progress | completed
   weekStart  DateTime?
   weekEnd    DateTime?
 
   wins       String?
   challenges String?
   learnings  String?
-  priorities String? // JSON array string
+  priorities String?      // JSON array string
   gratitude  String?
   mood       Int?
   energy     Int?
   notes      String?
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   items      ReviewItem[]
 
   @@index([type, date])
+  @@index([userId])
 }
 
 model ReviewItem {
@@ -190,20 +335,6 @@ model ReviewItem {
   item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@id([reviewId, itemId])
-}
-
-// ─── Reminders ───────────────────────────────────────────────────────────────
-model Reminder {
-  id        String   @id @default(cuid())
-  itemId    String
-  remindAt  DateTime
-  type      String   @default("notification")
-  sent      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-  @@index([remindAt])
 }
 
 // ─── Settings (key-value) ────────────────────────────────────────────────────

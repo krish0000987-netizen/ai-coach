@@ -1,7 +1,8 @@
-// Life OS — seed script
-// Run with: bun run src/lib/seed.ts
+// AI Life Coach — comprehensive seed script
+// Seeds all 11 life domains, sample documents, items, predictive reminders, and AI coach history.
 import { PrismaClient } from "@prisma/client";
 import { DOMAINS } from "./constants";
+import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
 
@@ -12,10 +13,10 @@ function daysFromNow(n: number, h = 9, m = 0) {
   return d;
 }
 
-async function main() {
-  console.log("🌱 Seeding Life OS…");
+export async function seedDatabase(targetUserId?: string) {
+  console.log("🌱 Seeding AI Life Coach database in Supabase…");
 
-  // Domains
+  // 1. Seed or update all 11 Domains
   for (const dom of DOMAINS) {
     await db.domain.upsert({
       where: { key: dom.key },
@@ -36,250 +37,607 @@ async function main() {
       },
     });
   }
-  const domains = await db.domain.findMany();
-  const dmap = Object.fromEntries(domains.map((d) => [d.key, d.id]));
 
-  // Projects / Threads
-  const projects = await Promise.all(
-    [
-      {
-        name: "Japan Trip 2025",
-        description: "Two-week adventure across Tokyo, Kyoto, and Osaka.",
-        color: "#ec4899",
-        icon: "Plane",
-        domainId: dmap.creativity,
-        status: "active",
-        progress: 35,
-        targetDate: daysFromNow(120),
-      },
-      {
-        name: "Health Transformation",
-        description: "Build strength, improve sleep, and run a half-marathon.",
-        color: "#f43f5e",
-        icon: "HeartPulse",
-        domainId: dmap.health,
-        status: "active",
-        progress: 55,
-        targetDate: daysFromNow(200),
-      },
-      {
-        name: "Launch Startup",
-        description: "Ship the MVP and get first 100 paying customers.",
-        color: "#10b981",
-        icon: "Rocket",
-        domainId: dmap.wealth,
-        status: "active",
-        progress: 20,
-        targetDate: daysFromNow(90),
-      },
-      {
-        name: "Get out of Debt",
-        description: "Pay off credit card and student loans.",
-        color: "#71717a",
-        icon: "TrendingDown",
-        domainId: dmap.wealth,
-        status: "active",
-        progress: 40,
-        targetDate: daysFromNow(300),
-      },
-      {
-        name: "Read 24 Books",
-        description: "Two books a month for a year.",
-        color: "#3b82f6",
-        icon: "BookOpen",
-        domainId: dmap.growth,
-        status: "active",
-        progress: 50,
-        targetDate: daysFromNow(180),
-      },
-    ].map((p) => db.project.create({ data: p as any })),
-  );
-  const pmap = Object.fromEntries(projects.map((p) => [p.name, p.id]));
+  // Also ensure legacy domain keys map to valid domain records for backward compatibility
+  const legacyMap: Record<string, string> = {
+    health: "health_wellness",
+    wealth: "financial_money",
+    growth: "education_learning",
+    network: "family_relationships",
+    creativity: "hobbies_skills",
+    admin: "legal_government",
+    mind_soul: "daily_personal",
+    time_action: "daily_personal",
+  };
 
-  // Helper to create item + metadata
-  async function item(data: Record<string, any>) {
-    const meta = data.metadata ? { metadata: JSON.stringify(data.metadata) } : {};
-    const { metadata, ...rest } = data;
-    return db.item.create({ data: { ...rest, ...meta } as any });
+  for (const [legacyKey, modernKey] of Object.entries(legacyMap)) {
+    const modern = await db.domain.findUnique({ where: { key: modernKey } });
+    if (modern) {
+      await db.domain.upsert({
+        where: { key: legacyKey },
+        update: {},
+        create: {
+          key: legacyKey,
+          name: modern.name,
+          description: modern.description,
+          icon: modern.icon,
+          color: modern.color,
+          order: 90,
+        },
+      });
+    }
   }
 
-  // ── Tasks (Time & Action) ──
-  await item({ type: "task", title: "Book flights to Tokyo", domainId: dmap.time_action, projectId: pmap["Japan Trip 2025"], status: "active", priority: 3, dueDate: daysFromNow(7), metadata: { estimate: "2h" } });
-  await item({ type: "task", title: "Research JR Pass options", domainId: dmap.time_action, projectId: pmap["Japan Trip 2025"], status: "active", priority: 2, dueDate: daysFromNow(10) });
-  await item({ type: "task", title: "Create packing list", domainId: dmap.time_action, projectId: pmap["Japan Trip 2025"], status: "active", priority: 1, dueDate: daysFromNow(30) });
-  await item({ type: "task", title: "Renew passport", domainId: dmap.time_action, projectId: pmap["Japan Trip 2025"], status: "done", priority: 4, completedAt: daysFromNow(-5), dueDate: daysFromNow(-5) });
+  const allDomains = await db.domain.findMany();
+  const dmap = Object.fromEntries(allDomains.map((d) => [d.key, d.id]));
 
-  await item({ type: "task", title: "Morning run 5km", domainId: dmap.time_action, projectId: pmap["Health Transformation"], status: "active", priority: 2, dueDate: daysFromNow(1), metadata: { estimate: "30m" } });
-  await item({ type: "task", title: "Meal prep for the week", domainId: dmap.time_action, projectId: pmap["Health Transformation"], status: "active", priority: 2, dueDate: daysFromNow(2) });
-  await item({ type: "task", title: "Schedule annual physical", domainId: dmap.time_action, projectId: pmap["Health Transformation"], status: "active", priority: 3, dueDate: daysFromNow(14) });
-
-  await item({ type: "task", title: "Finish landing page copy", domainId: dmap.time_action, projectId: pmap["Launch Startup"], status: "active", priority: 4, dueDate: daysFromNow(2) });
-  await item({ type: "task", title: "Set up Stripe billing", domainId: dmap.time_action, projectId: pmap["Launch Startup"], status: "active", priority: 3, dueDate: daysFromNow(5) });
-  await item({ type: "task", title: "Write launch announcement", domainId: dmap.time_action, projectId: pmap["Launch Startup"], status: "active", priority: 2, dueDate: daysFromNow(8) });
-  await item({ type: "task", title: "Email beta testers", domainId: dmap.time_action, projectId: pmap["Launch Startup"], status: "done", priority: 2, completedAt: daysFromNow(-2), dueDate: daysFromNow(-2) });
-
-  await item({ type: "task", title: "Pay credit card bill", domainId: dmap.time_action, projectId: pmap["Get out of Debt"], status: "active", priority: 4, dueDate: daysFromNow(3), metadata: { amount: 850 } });
-  await item({ type: "task", title: "Cancel unused gym membership", domainId: dmap.time_action, projectId: pmap["Get out of Debt"], status: "active", priority: 1, dueDate: daysFromNow(7) });
-
-  // ── Habits ──
-  const medHabit = await item({ type: "habit", title: "Meditate 10 minutes", domainId: dmap.mind_soul, status: "active", metadata: { cadence: "daily", target: 10, unit: "min", streak: 4 } });
-  const runHabit = await item({ type: "habit", title: "Run / Walk 5km", domainId: dmap.health, status: "active", metadata: { cadence: "daily", target: 5, unit: "km", streak: 2 } });
-  const readHabit = await item({ type: "habit", title: "Read 20 pages", domainId: dmap.growth, status: "active", projectId: pmap["Read 24 Books"], metadata: { cadence: "daily", target: 20, unit: "pages", streak: 6 } });
-  const waterHabit = await item({ type: "habit", title: "Drink 2L water", domainId: dmap.health, status: "active", metadata: { cadence: "daily", target: 2, unit: "L", streak: 9 } });
-  const writeHabit = await item({ type: "habit", title: "Morning pages", domainId: dmap.mind_soul, status: "active", metadata: { cadence: "daily", target: 1, unit: "entry", streak: 3 } });
-
-  // Habit logs for the last 14 days
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const r = Math.random();
-    if (medHabit && r > 0.2) await db.habitLog.create({ data: { itemId: medHabit.id, date: d, value: 10 } }).catch(() => {});
-    if (runHabit && r > 0.45) await db.habitLog.create({ data: { itemId: runHabit.id, date: d, value: 5 } }).catch(() => {});
-    if (readHabit && r > 0.3) await db.habitLog.create({ data: { itemId: readHabit.id, date: d, value: 20 } }).catch(() => {});
-    if (waterHabit && r > 0.15) await db.habitLog.create({ data: { itemId: waterHabit.id, date: d, value: 2 } }).catch(() => {});
-    if (writeHabit && r > 0.5) await db.habitLog.create({ data: { itemId: writeHabit.id, date: d, value: 1 } }).catch(() => {});
+  // 2. Ensure a default Demo User exists
+  let demoUser = await db.user.findFirst({ where: { email: "demo@lifecoach.ai" } });
+  if (!demoUser) {
+    const passwordHash = await bcrypt.hash("demo123456", 10);
+    demoUser = await db.user.create({
+      data: {
+        id: "demo-user-life-coach-01",
+        email: "demo@lifecoach.ai",
+        name: "Alex Morgan",
+        passwordHash,
+      },
+    });
   }
 
-  // ── Journal entries ──
-  await item({ type: "journal", title: "Stress about money", domainId: dmap.mind_soul, projectId: pmap["Get out of Debt"], status: "active", scheduledAt: daysFromNow(-2, 21), content: "Feeling the weight of debt again today. Need to sit down and make a real plan. The interest is eating into everything. I'll start by cutting subscriptions and cooking at home more." });
-  await item({ type: "journal", title: "Great workout session", domainId: dmap.mind_soul, projectId: pmap["Health Transformation"], status: "active", scheduledAt: daysFromNow(-1, 8), content: "Hit a new PR on squats today. Energy is finally coming back. Sleep has been solid for a week. Feeling optimistic." });
-  await item({ type: "journal", title: "Startup doubts", domainId: dmap.mind_soul, projectId: pmap["Launch Startup"], status: "active", scheduledAt: daysFromNow(-3, 23), content: "Questioning whether the market really wants this. But the beta feedback was encouraging. I need to talk to 5 more users this week." });
+  const userId = targetUserId || demoUser.id;
 
-  // ── Notes ──
-  await item({ type: "note", title: "Tokyo neighborhood research", domainId: dmap.creativity, projectId: pmap["Japan Trip 2025"], status: "active", content: "## Areas to stay\n- **Shinjuku** — lively, great transit\n- **Shibuya** — young, energetic\n- **Asakusa** — quieter, traditional\n- **Ginza** — upscale shopping" });
-  await item({ type: "note", title: "Startup pricing ideas", domainId: dmap.wealth, projectId: pmap["Launch Startup"], status: "active", content: "Freemium → $9/mo → $29/mo → custom. Annual gets 2 months free. Lifetime deal for early adopters at $199." });
-  await item({ type: "note", title: "Half-marathon training plan", domainId: dmap.health, projectId: pmap["Health Transformation"], status: "active", content: "Week 1-4: base building. Week 5-8: tempo runs. Week 9-12: long runs + taper." });
-
-  // ── Finance ──
-  await item({ type: "finance", title: "Salary", domainId: dmap.wealth, status: "active", dueDate: daysFromNow(5), metadata: { kind: "income", amount: 4200, recurring: "monthly" } });
-  await item({ type: "finance", title: "Rent", domainId: dmap.wealth, status: "active", dueDate: daysFromNow(2), metadata: { kind: "expense", amount: 1450, recurring: "monthly" } });
-  await item({ type: "finance", title: "Netflix subscription", domainId: dmap.wealth, status: "active", dueDate: daysFromNow(8), metadata: { kind: "expense", amount: 15.99, recurring: "monthly", subscription: true } });
-  await item({ type: "finance", title: "Spotify", domainId: dmap.wealth, status: "active", dueDate: daysFromNow(12), metadata: { kind: "expense", amount: 11.99, recurring: "monthly", subscription: true } });
-  await item({ type: "finance", title: "Gym membership", domainId: dmap.wealth, status: "active", dueDate: daysFromNow(20), metadata: { kind: "expense", amount: 39, recurring: "monthly", subscription: true } });
-  await item({ type: "finance", title: "Groceries", domainId: dmap.wealth, status: "active", dueDate: daysFromNow(1), metadata: { kind: "expense", amount: 120 } });
-  await item({ type: "finance", title: "Emergency fund goal", domainId: dmap.wealth, status: "active", metadata: { kind: "goal", amount: 10000, current: 3200 } });
-
-  // ── Health: symptoms & meds ──
-  await item({ type: "symptom", title: "Headache (mild)", domainId: dmap.health, status: "active", scheduledAt: daysFromNow(-1, 16), metadata: { severity: 2 } });
-  await item({ type: "medication", title: "Vitamin D", domainId: dmap.health, status: "active", metadata: { dose: "1000 IU", frequency: "daily" } });
-  await item({ type: "event", title: "Dental cleaning", domainId: dmap.health, status: "active", scheduledAt: daysFromNow(18, 10), metadata: { location: "Bright Smile Dental" } });
-
-  // ── Network: contacts ──
-  await item({ type: "contact", title: "Sarah Chen", domainId: dmap.network, status: "active", metadata: { relationship: "close friend", birthday: "1992-04-18", lastContact: daysFromNow(-12).toISOString() } });
-  await item({ type: "contact", title: "Marcus Rivera", domainId: dmap.network, status: "active", metadata: { relationship: "mentor", lastContact: daysFromNow(-30).toISOString() } });
-  await item({ type: "contact", title: "Priya Patel", domainId: dmap.network, status: "active", metadata: { relationship: "colleague", lastContact: daysFromNow(-3).toISOString() } });
-  await item({ type: "event", title: "Sarah's birthday", domainId: dmap.network, status: "active", scheduledAt: daysFromNow(20, 19), metadata: { contactId: "Sarah Chen" } });
-
-  // ── Growth: books & courses ──
-  await item({ type: "bookmark", title: "Atomic Habits", domainId: dmap.growth, projectId: pmap["Read 24 Books"], status: "active", metadata: { author: "James Clear", medium: "book", status: "reading", rating: 5, currentPage: 180, totalPages: 320 }, content: "Tiny changes, remarkable results. Focus on systems over goals.\n\n## Key takeaways\n- **1% better every day** compounds into 37x in a year\n- Focus on **systems** over goals\n- The 4 laws: make it obvious, attractive, easy, satisfying\n- Identity-based habits: \"I am a reader\" not \"I want to read more\"" });
-  await item({ type: "bookmark", title: "Deep Work", domainId: dmap.growth, projectId: pmap["Read 24 Books"], status: "done", priority: 2, completedAt: daysFromNow(-20), metadata: { author: "Cal Newport", medium: "book", status: "finished", rating: 5 } });
-  await item({ type: "bookmark", title: "The Almanack of Naval Ravikant", domainId: dmap.growth, status: "active", metadata: { author: "Eric Jorgenson", medium: "book", status: "queued" } });
-  await item({ type: "bookmark", title: "Building a Second Brain", domainId: dmap.growth, status: "active", metadata: { author: "Tiago Forte", medium: "course", status: "queued", url: "https://buildingasecondbrain.com" } });
-
-  // ── Creativity: movies to watch / watched ──
-  await item({ type: "bookmark", title: "Everything Everywhere All at Once", domainId: dmap.creativity, status: "active", metadata: { medium: "movie", status: "queued", author: "Daniels" }, content: "Multiverse adventure. Recommended by Sarah." });
-  await item({ type: "bookmark", title: "Dune: Part Two", domainId: dmap.creativity, status: "active", metadata: { medium: "movie", status: "queued", author: "Denis Villeneuve" } });
-  await item({ type: "bookmark", title: "Spirited Away", domainId: dmap.creativity, status: "done", metadata: { medium: "movie", status: "finished", rating: 5, author: "Hayao Miyazaki" }, completedAt: daysFromNow(-8), content: "A masterpiece. The bathhouse world is so immersive. Haku's river spirit reveal was beautiful." });
-
-  // ── Mind & Soul ──
-  await item({ type: "vision", title: "Live with intention", domainId: dmap.mind_soul, status: "active", content: "I want every day to be a deliberate choice, not a reaction. Less screen time, more presence." });
-  await item({ type: "vision", title: "Financial peace", domainId: dmap.mind_soul, projectId: pmap["Get out of Debt"], status: "active", content: "Be debt-free and have a 6-month emergency fund within 2 years." });
-  await item({ type: "affirmation", title: "I am capable of hard things", domainId: dmap.mind_soul, status: "active", content: "Repeat each morning." });
-  await item({ type: "affirmation", title: "Progress over perfection", domainId: dmap.mind_soul, status: "active" });
-  await item({ type: "goal", title: "Run a half-marathon", domainId: dmap.health, projectId: pmap["Health Transformation"], status: "active", dueDate: daysFromNow(90), metadata: { measure: "21km race" } });
-
-  // ── Creativity & Joy ──
-  await item({ type: "idea", title: "App for tracking plant care", domainId: dmap.creativity, status: "inbox", content: "Notification + watering schedule with plant ID." });
-  await item({ type: "idea", title: "Weekend podcast about local food", domainId: dmap.creativity, status: "inbox" });
-  await item({ type: "bookmark", title: "Past Lives", domainId: dmap.creativity, status: "done", metadata: { medium: "movie", rating: 4, status: "finished", author: "Celine Song" }, completedAt: daysFromNow(-15), content: "Quiet, devastating. The ending stayed with me for days." });
-  await item({ type: "milestone", title: "Japan Trip booked!", domainId: dmap.creativity, projectId: pmap["Japan Trip 2025"], status: "done", completedAt: daysFromNow(-5), scheduledAt: daysFromNow(-5) });
-
-  // ── Inbox (Quick Capture) ──
-  await item({ type: "note", title: "Look into tax-advantaged accounts", domainId: dmap.wealth, status: "inbox" });
-  await item({ type: "task", title: "Reply to landlord about lease renewal", domainId: dmap.admin, status: "inbox" });
-  await item({ type: "idea", title: "Try a cold plunge 3x this week", domainId: dmap.health, status: "inbox" });
-  await item({ type: "note", title: "Call mom this weekend", domainId: dmap.network, status: "inbox" });
-  await item({ type: "bookmark", title: "Article: The art of saying no", domainId: dmap.growth, status: "inbox", metadata: { url: "https://example.com/saying-no" } });
-
-  // ── Admin ──
-  await item({ type: "task", title: "Replace HVAC filter", domainId: dmap.admin, status: "active", priority: 1, dueDate: daysFromNow(6) });
-  await item({ type: "task", title: "Grocery: oats, eggs, spinach, bananas", domainId: dmap.admin, status: "active", priority: 2, dueDate: daysFromNow(1), content: "Weekly grocery run" });
-  await item({ type: "document", title: "Passport scan", domainId: dmap.admin, status: "active", metadata: { category: "identity" } });
-
-  // ── Bi-directional links ──
-  const debtJournal = await db.item.findFirst({ where: { title: "Stress about money" } });
-  const debtProject = await db.project.findFirst({ where: { name: "Get out of Debt" } });
-  const financialVision = await db.item.findFirst({ where: { title: "Financial peace" } });
-  const halfGoal = await db.item.findFirst({ where: { title: "Run a half-marathon" } });
-  const healthProject = await db.project.findFirst({ where: { name: "Health Transformation" } });
-  if (debtJournal && financialVision) {
-    await db.link.create({ data: { fromId: debtJournal.id, toId: financialVision.id, type: "related", note: "journal references the vision" } }).catch(() => {});
-  }
-  if (halfGoal && runHabit) {
-    await db.link.create({ data: { fromId: halfGoal.id, toId: runHabit.id, type: "related", note: "habit supports this goal" } }).catch(() => {});
-  }
-  if (medHabit && writeHabit) {
-    await db.link.create({ data: { fromId: medHabit.id, toId: writeHabit.id, type: "related" } }).catch(() => {});
-  }
-
-  // ── Reviews ──
-  await db.review.create({
-    data: {
-      type: "daily",
-      date: daysFromNow(-1, 21),
-      status: "completed",
-      wins: "Shipped the landing page hero section and had a great run.",
-      challenges: "Got distracted by notifications in the afternoon.",
-      learnings: "Deep work blocks need to be phone-free.",
-      gratitude: "Grateful for my supportive partner and a warm apartment.",
-      priorities: '["Finish Stripe integration","30-min run","Process inbox"]',
-      mood: 4,
-      energy: 3,
-      notes: "Felt focused in the morning, drained by evening.",
+  // 3. Seed Projects
+  const projects = [
+    {
+      name: "Health & Vitality 2026",
+      description: "Comprehensive wellness: strength training, sleep tracking, and preventative care.",
+      color: "#ef4444",
+      icon: "HeartPulse",
+      domainId: dmap.health_wellness || dmap.health,
+      userId,
+      status: "active",
+      progress: 60,
+      targetDate: daysFromNow(180),
     },
-  });
-  await db.review.create({
-    data: {
-      type: "daily",
-      date: daysFromNow(-2, 21),
-      status: "completed",
-      wins: "Cooked a healthy dinner and meditated.",
-      challenges: "Procrastinated on the email to landlord.",
-      learnings: "Hard conversations get easier when scheduled.",
-      gratitude: "Body felt strong during the workout.",
-      priorities: '["Reply to landlord","Book flights","Read 20 pages"]',
-      mood: 3,
-      energy: 3,
+    {
+      name: "Financial Freedom & House Fund",
+      description: "Build 6-month emergency reserve and save for down payment.",
+      color: "#10b981",
+      icon: "Wallet",
+      domainId: dmap.financial_money || dmap.wealth,
+      userId,
+      status: "active",
+      progress: 45,
+      targetDate: daysFromNow(240),
     },
-  });
-  await db.review.create({
-    data: {
-      type: "weekly",
-      date: daysFromNow(-4, 20),
-      status: "completed",
-      weekStart: daysFromNow(-10),
-      weekEnd: daysFromNow(-4),
-      wins: "Hit 5/7 meditation days, read 80 pages, got passport renewed.",
-      challenges: "Overspent on takeout. Skipped two runs.",
-      learnings: "Meal prep on Sunday makes the whole week smoother.",
-      gratitude: "Grateful for Marcus's mentorship this week.",
-      priorities: '["Launch landing page","Plan Japan itinerary","3 strength workouts"]',
-      mood: 4,
-      energy: 3,
-      notes: "Good momentum overall. Need to tighten the budget.",
+    {
+      name: "Senior Software Architect Career Path",
+      description: "Certifications, portfolio projects, and leadership milestones.",
+      color: "#8b5cf6",
+      icon: "Briefcase",
+      domainId: dmap.career_work,
+      userId,
+      status: "active",
+      progress: 70,
+      targetDate: daysFromNow(120),
     },
+    {
+      name: "European Alps Adventure",
+      description: "Two-week hiking and photography trip in Switzerland & Italy.",
+      color: "#06b6d4",
+      icon: "Plane",
+      domainId: dmap.travel_experiences,
+      userId,
+      status: "active",
+      progress: 30,
+      targetDate: daysFromNow(90),
+    },
+    {
+      name: "Landscape Photography Portfolio",
+      description: "Build professional gallery and launch fine art print shop.",
+      color: "#d946ef",
+      icon: "Palette",
+      domainId: dmap.hobbies_skills,
+      userId,
+      status: "active",
+      progress: 40,
+      targetDate: daysFromNow(150),
+    },
+  ];
+
+  const pmap: Record<string, string> = {};
+  for (const p of projects) {
+    const existing = await db.project.findFirst({ where: { name: p.name, userId } });
+    if (!existing) {
+      const created = await db.project.create({ data: p as any });
+      pmap[p.name] = created.id;
+    } else {
+      pmap[p.name] = existing.id;
+    }
+  }
+
+  // 4. Seed Representative Items across all 11 Categories
+  const sampleItems = [
+    // 1. Health & Wellness
+    {
+      type: "milestone",
+      title: "Annual Physical & Comprehensive Blood Panel",
+      content: "Complete metabolic panel, lipid profile, and vitamin D levels checked. All metrics optimal.",
+      domainId: dmap.health_wellness,
+      userId,
+      status: "done",
+      completedAt: daysFromNow(-30),
+      metadata: { doctor: "Dr. Kathryn Vance", clinic: "Pacific Health Center" },
+    },
+    {
+      type: "habit",
+      title: "Daily Morning Mobility & 8k Steps",
+      content: "15 min stretch routine and daily walking goal.",
+      domainId: dmap.health_wellness,
+      projectId: pmap["Health & Vitality 2026"],
+      userId,
+      status: "active",
+      metadata: { streak: 14, target: 8000, unit: "steps" },
+    },
+    {
+      type: "medication",
+      title: "Vitamin D3 + K2 & Omega-3 Fish Oil",
+      content: "Daily morning supplement with breakfast.",
+      domainId: dmap.health_wellness,
+      userId,
+      status: "active",
+      metadata: { dosage: "5000 IU + 2000mg", timing: "Morning" },
+    },
+
+    // 2. Financial & Money
+    {
+      type: "finance",
+      title: "Monthly Salary / Consulting Income",
+      domainId: dmap.financial_money,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(7),
+      metadata: { kind: "income", amount: 7500, recurring: "monthly" },
+    },
+    {
+      type: "finance",
+      title: "Emergency Fund Milestone ($25,000)",
+      domainId: dmap.financial_money,
+      projectId: pmap["Financial Freedom & House Fund"],
+      userId,
+      status: "active",
+      metadata: { kind: "goal", amount: 25000, current: 18500 },
+    },
+    {
+      type: "finance",
+      title: "Monthly Rent & Utilities",
+      domainId: dmap.financial_money,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(5),
+      metadata: { kind: "expense", amount: 2100, recurring: "monthly" },
+    },
+
+    // 3. Education & Learning
+    {
+      type: "milestone",
+      title: "B.S. in Computer Science - Honors",
+      content: "Graduated with Magna Cum Laude honors. Core coursework in distributed systems and algorithms.",
+      domainId: dmap.education_learning,
+      userId,
+      status: "done",
+      completedAt: new Date("2021-05-15"),
+      metadata: { institution: "University of Washington", degree: "Bachelor of Science" },
+    },
+    {
+      type: "goal",
+      title: "AWS Certified Solutions Architect Professional",
+      content: "Complete Cloud Academy prep course and practice exams.",
+      domainId: dmap.education_learning,
+      projectId: pmap["Senior Software Architect Career Path"],
+      userId,
+      status: "active",
+      dueDate: daysFromNow(45),
+    },
+
+    // 4. Career & Work
+    {
+      type: "milestone",
+      title: "Promoted to Lead Systems Engineer",
+      content: "Led the cloud migration architecture for 3 core services.",
+      domainId: dmap.career_work,
+      userId,
+      status: "done",
+      completedAt: new Date("2024-02-01"),
+      metadata: { company: "NextGen Technologies", impact: "Reduced cloud costs by 32%" },
+    },
+    {
+      type: "task",
+      title: "Update Executive Resume & Portfolio Case Studies",
+      content: "Include quantified achievements and new distributed architecture wins.",
+      domainId: dmap.career_work,
+      projectId: pmap["Senior Software Architect Career Path"],
+      userId,
+      status: "active",
+      priority: 3,
+      dueDate: daysFromNow(14),
+    },
+
+    // 5. Legal & Government
+    {
+      type: "milestone",
+      title: "Passport Renewal Due",
+      content: "US Passport expires in 6 months. Renewal takes 8-11 weeks.",
+      domainId: dmap.legal_government,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(180),
+      metadata: { documentNumber: "US-P-984421", expiry: daysFromNow(180).toISOString() },
+    },
+    {
+      type: "milestone",
+      title: "Executed Living Will & Healthcare Proxy",
+      content: "Signed with estate attorney; copy stored in Vault.",
+      domainId: dmap.legal_government,
+      userId,
+      status: "done",
+      completedAt: new Date("2025-01-10"),
+    },
+
+    // 6. Family & Relationships
+    {
+      type: "contact",
+      title: "Elena Morgan (Spouse)",
+      content: "Emergency contact, shared beneficiaries on insurance and accounts.",
+      domainId: dmap.family_relationships,
+      userId,
+      status: "active",
+      metadata: { relationship: "Spouse", phone: "+1 (555) 234-5678", anniversary: "2022-09-18" },
+    },
+    {
+      type: "event",
+      title: "Wedding Anniversary Celebration",
+      domainId: dmap.family_relationships,
+      userId,
+      status: "active",
+      scheduledAt: daysFromNow(45),
+    },
+
+    // 7. Property & Assets
+    {
+      type: "milestone",
+      title: "Vehicle Registration & Title (Tesla Model Y)",
+      content: "VIN: 5YJYGDEE8NF000000. Insurance active with State Farm.",
+      domainId: dmap.property_assets,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(60),
+    },
+    {
+      type: "task",
+      title: "HVAC Semi-Annual Filter Replacement & Service",
+      domainId: dmap.property_assets,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(20),
+    },
+
+    // 8. Travel & Experiences
+    {
+      type: "event",
+      title: "Flight to Zurich (Swiss Alps Trek)",
+      content: "Flight LX039 confirmed. Booking ref: W78XYZ.",
+      domainId: dmap.travel_experiences,
+      projectId: pmap["European Alps Adventure"],
+      userId,
+      status: "active",
+      scheduledAt: daysFromNow(90),
+    },
+    {
+      type: "idea",
+      title: "Bucket List: Northern Lights in Tromsø, Norway",
+      domainId: dmap.travel_experiences,
+      userId,
+      status: "inbox",
+    },
+
+    // 9. Hobbies & Skills
+    {
+      type: "habit",
+      title: "Golden Hour Photo Shoot & Light Editing",
+      domainId: dmap.hobbies_skills,
+      projectId: pmap["Landscape Photography Portfolio"],
+      userId,
+      status: "active",
+      metadata: { cadence: "weekly", streak: 8 },
+    },
+    {
+      type: "goal",
+      title: "Launch Fine Art Print Shop ($500/mo goal)",
+      domainId: dmap.hobbies_skills,
+      projectId: pmap["Landscape Photography Portfolio"],
+      userId,
+      status: "active",
+      dueDate: daysFromNow(60),
+    },
+
+    // 10. Insurance & Protection
+    {
+      type: "finance",
+      title: "Comprehensive Health & Dental Insurance Policy",
+      content: "BlueCross PPO Plan. Policy #BC-8899201. Annual deductible met.",
+      domainId: dmap.insurance_protection,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(210),
+      metadata: { policyType: "Health PPO", provider: "BlueCross", annualPremium: 4800 },
+    },
+    {
+      type: "finance",
+      title: "Auto & Umbrella Liability Insurance Renewal",
+      content: "Policy #SF-992014. Premium due for semi-annual renewal.",
+      domainId: dmap.insurance_protection,
+      userId,
+      status: "active",
+      dueDate: daysFromNow(28),
+      metadata: { policyType: "Auto & Umbrella", provider: "State Farm", premium: 720 },
+    },
+
+    // 11. Daily Life & Personal
+    {
+      type: "journal",
+      title: "Clarity on balance and deliberate living",
+      content: `Today felt deeply focused. Completed the system architecture document and got out for an 8k run. 
+Grateful for quiet mornings, good coffee, and having a single source of truth for all my life records.`,
+      domainId: dmap.daily_personal,
+      userId,
+      status: "active",
+      scheduledAt: daysFromNow(-1, 20),
+    },
+    {
+      type: "routine",
+      title: "Evening Digital Shutdown & Reading Routine",
+      content: "Screen off at 10 PM. 20 pages of reading, 5 minutes of gratitude reflection.",
+      domainId: dmap.daily_personal,
+      userId,
+      status: "active",
+    },
+  ];
+
+  for (const itemData of sampleItems) {
+    const existing = await db.item.findFirst({
+      where: { title: itemData.title, userId },
+    });
+    if (!existing) {
+      const { metadata, ...rest } = itemData;
+      await db.item.create({
+        data: {
+          ...rest,
+          metadata: metadata ? JSON.stringify(metadata) : null,
+        } as any,
+      });
+    }
+  }
+
+  // 5. Seed Verified Documents in Document Vault
+  const sampleDocuments = [
+    {
+      title: "Passport - United States of America",
+      description: "Official biometric passport. Renewal recommended 6 months before expiry.",
+      category: "legal_government",
+      documentType: "passport",
+      fileName: "Passport_Alex_Morgan.pdf",
+      fileSize: 1420500,
+      mimeType: "application/pdf",
+      storagePath: `${userId}/demo/Passport_Alex_Morgan.pdf`,
+      issueDate: new Date("2016-08-10"),
+      expiryDate: daysFromNow(180),
+      tags: "passport,identification,travel,official",
+      extractedText: "PASSPORT / PASSEPORT / PASAPORTE. UNITED STATES OF AMERICA. SURNAME: MORGAN. GIVEN NAMES: ALEX. NATIONALITY: UNITED STATES OF AMERICA. PASSPORT NO: 984421001. EXPIRATION DATE: 10 AUG 2026.",
+      extractionStatus: "completed",
+    },
+    {
+      title: "Comprehensive Health Panel & Lab Results",
+      description: "Annual preventative lab screen by Pacific Health Center. Cholesterol, HbA1c, Vitamin D.",
+      category: "health_wellness",
+      documentType: "medical_report",
+      fileName: "Annual_Lab_Panel_2025.pdf",
+      fileSize: 840200,
+      mimeType: "application/pdf",
+      storagePath: `${userId}/demo/Annual_Lab_Panel_2025.pdf`,
+      issueDate: daysFromNow(-30),
+      expiryDate: daysFromNow(335), // Due again in a year
+      tags: "health,bloodwork,lab_results,preventative",
+      extractedText: "PACIFIC HEALTH CENTER - LABORATORY REPORT. PATIENT: ALEX MORGAN. TEST DATE: 2025-09-20. Total Cholesterol: 178 mg/dL (Desirable). Fasting Blood Glucose: 86 mg/dL. Vitamin D: 52 ng/mL (Optimal). ALL PARAMETERS WITHIN NORMAL LIMITS.",
+      extractionStatus: "completed",
+    },
+    {
+      title: "State Farm Auto & Umbrella Insurance Policy",
+      description: "Comprehensive vehicle coverage and $1M umbrella liability policy schedule.",
+      category: "insurance_protection",
+      documentType: "auto_insurance_policy",
+      fileName: "StateFarm_Policy_Schedule_2025.pdf",
+      fileSize: 1105400,
+      mimeType: "application/pdf",
+      storagePath: `${userId}/demo/StateFarm_Policy_Schedule_2025.pdf`,
+      issueDate: daysFromNow(-150),
+      expiryDate: daysFromNow(28), // Expiration in 28 days!
+      tags: "insurance,auto,umbrella,policy,renewal",
+      extractedText: "STATE FARM INSURANCE POLICY DECLARATIONS. POLICYHOLDER: ALEX MORGAN. VEHICLE: 2023 TESLA MODEL Y. COVERAGE: COMPREHENSIVE & COLLISION $500 DEDUCTIBLE. UMBRELLA LIABILITY: $1,000,000. RENEWAL DATE: WITHIN 30 DAYS.",
+      extractionStatus: "completed",
+    },
+    {
+      title: "Residential Property Deed & Title Insurance",
+      description: "Recorded warranty deed and title insurance policy for home.",
+      category: "property_assets",
+      documentType: "property_deed",
+      fileName: "Warranty_Deed_Property_Title.pdf",
+      fileSize: 2150000,
+      mimeType: "application/pdf",
+      storagePath: `${userId}/demo/Warranty_Deed_Property_Title.pdf`,
+      issueDate: new Date("2023-04-12"),
+      tags: "property,home,deed,real_estate,title",
+      extractedText: "OFFICIAL RECORDS - STATUTORY WARRANTY DEED. RECORDED IN COUNTY RECORDER OFFICE. TITLE HOLDER: ALEX MORGAN & ELENA MORGAN. PARCEL ID: 449-012-990.",
+      extractionStatus: "completed",
+    },
+    {
+      title: "University of Washington Bachelor of Science Degree",
+      description: "Official degree certificate in Computer Science with Honors.",
+      category: "education_learning",
+      documentType: "diploma_degree",
+      fileName: "UW_BSc_Computer_Science_Degree.pdf",
+      fileSize: 1850000,
+      mimeType: "application/pdf",
+      storagePath: `${userId}/demo/UW_BSc_Computer_Science_Degree.pdf`,
+      issueDate: new Date("2021-05-15"),
+      tags: "education,degree,university,diploma",
+      extractedText: "BOARD OF REGENTS OF THE UNIVERSITY OF WASHINGTON. DEGREE OF BACHELOR OF SCIENCE IN COMPUTER SCIENCE CONFERRED UPON ALEX MORGAN WITH HONORS.",
+      extractionStatus: "completed",
+    },
+    {
+      title: "Executed Living Will and Medical Power of Attorney",
+      description: "Legal estate document designating healthcare proxy and end-of-life directives.",
+      category: "legal_government",
+      documentType: "will_testament",
+      fileName: "Living_Will_Healthcare_Proxy.pdf",
+      fileSize: 920000,
+      mimeType: "application/pdf",
+      storagePath: `${userId}/demo/Living_Will_Healthcare_Proxy.pdf`,
+      issueDate: new Date("2025-01-10"),
+      tags: "legal,will,estate,power_of_attorney",
+      extractedText: "ADVANCE HEALTHCARE DIRECTIVE AND MEDICAL POWER OF ATTORNEY. PRINCIPAL: ALEX MORGAN. APPOINTED AGENT: ELENA MORGAN. NOTARIZED BY STATE COMMISSIONER.",
+      extractionStatus: "completed",
+    },
+  ];
+
+  for (const doc of sampleDocuments) {
+    const existing = await db.document.findFirst({
+      where: { title: doc.title, userId },
+    });
+    if (!existing) {
+      await db.document.create({
+        data: {
+          ...doc,
+          userId,
+        },
+      });
+    }
+  }
+
+  // 6. Seed Predictive Reminders
+  const autoInsuranceDoc = await db.document.findFirst({
+    where: { title: { contains: "State Farm" }, userId },
   });
 
-  console.log("✅ Seed complete.");
+  const passportDoc = await db.document.findFirst({
+    where: { title: { contains: "Passport" }, userId },
+  });
+
+  const reminders = [
+    {
+      title: "Auto & Umbrella Insurance Policy Renewal in 28 Days",
+      description: "Review current policy schedule and shop renewal rates before automatic renewal.",
+      category: "insurance_protection",
+      type: "renewal",
+      remindAt: daysFromNow(1),
+      dueDate: daysFromNow(28),
+      documentId: autoInsuranceDoc?.id,
+      userId,
+    },
+    {
+      title: "Passport Expiration in 6 Months (Renewal Window Open)",
+      description: "US Passport expires in August 2026. Submit renewal application now to avoid expediting fees.",
+      category: "legal_government",
+      type: "expiry",
+      remindAt: daysFromNow(3),
+      dueDate: daysFromNow(180),
+      documentId: passportDoc?.id,
+      userId,
+    },
+    {
+      title: "Vehicle Registration & Annual Smog Check",
+      description: "Tesla Model Y registration due with state DMV.",
+      category: "property_assets",
+      type: "expiry",
+      remindAt: daysFromNow(14),
+      dueDate: daysFromNow(60),
+      userId,
+    },
+    {
+      title: "Schedule Semi-Annual Dental Cleaning & Checkup",
+      description: "6 months since last cleaning. Preventative dental is covered 100% by insurance.",
+      category: "health_wellness",
+      type: "health_check",
+      remindAt: daysFromNow(5),
+      userId,
+    },
+  ];
+
+  for (const rem of reminders) {
+    const existing = await db.reminder.findFirst({
+      where: { title: rem.title, userId },
+    });
+    if (!existing) {
+      await db.reminder.create({
+        data: rem as any,
+      });
+    }
+  }
+
+  // 7. Seed Sample AI Coach Conversations
+  const sampleConversation = await db.aICoachConversation.findFirst({
+    where: { userId, coachType: "predictive" },
+  });
+
+  if (!sampleConversation) {
+    const conv = await db.aICoachConversation.create({
+      data: {
+        userId,
+        coachType: "predictive",
+        title: "Upcoming Document Expiries & Insurance Audit",
+      },
+    });
+
+    await db.aICoachMessage.createMany({
+      data: [
+        {
+          conversationId: conv.id,
+          role: "user",
+          content: "What documents or policies are coming up for renewal soon?",
+        },
+        {
+          conversationId: conv.id,
+          role: "assistant",
+          content: `### Predictive Life Audit & Expiry Analysis
+
+Here is a summary of your upcoming deadlines synthesized across your verified vault records:
+
+1. **Auto & Umbrella Insurance Policy (State Farm)**:
+   - **Renewal Due**: In **28 days** (${daysFromNow(28).toLocaleDateString()})
+   - **Action**: Check if your mileage tier has changed to save on premiums, or compare rates with bundled homeowner options.
+
+2. **US Passport**:
+   - **Expiry Date**: ${daysFromNow(180).toLocaleDateString()} (in 6 months)
+   - **Action**: Most international airlines require at least 6 months validity. Your upcoming Swiss Alps trip is in 90 days, so start your renewal now to ensure smooth travel.
+
+3. **Preventative Health**:
+   - Your last comprehensive metabolic lab report was logged 30 days ago and is completely clean. Consider scheduling your dental checkup next month.
+
+*Would you like me to draft an insurance review checklist or help set up a renewal task?*`,
+        },
+      ],
+    });
+  }
+
+  console.log("✅ Database successfully seeded with 11 categories, documents, reminders, and coaching!");
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await db.$disconnect();
-  });
+if (require.main === module) {
+  seedDatabase()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // The phone must authenticate with email+password to confirm
     if (confirmEmail && confirmPassword) {
       const user = await db.user.findUnique({ where: { email: confirmEmail.toLowerCase() } });
-      if (!user) return bad("Invalid credentials", 401);
+      if (!user || !user.passwordHash) return bad("Invalid credentials", 401);
       const valid = await verifyPassword(confirmPassword, user.passwordHash);
       if (!valid) return bad("Invalid credentials", 401);
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     userEmail = session.email;
   } else {
     const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
-    if (!user) return bad("Invalid email or password", 401);
+    if (!user || !user.passwordHash) return bad("Invalid email or password", 401);
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) return bad("Invalid email or password", 401);
     userId = user.id;

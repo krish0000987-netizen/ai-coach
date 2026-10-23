@@ -4,6 +4,11 @@ import { create } from "zustand";
 
 export type ViewKey =
   | "dashboard"
+  | "coaches"
+  | "vault"
+  | "reminders"
+  | "timeline"
+  | "family"
   | "inbox"
   | "calendar"
   | "projects"
@@ -16,6 +21,19 @@ export type ViewKey =
   | "sanctuary"
   | "journal"
   | "settings"
+  // 11 Life Categories:
+  | "health_wellness"
+  | "financial_money"
+  | "education_learning"
+  | "career_work"
+  | "legal_government"
+  | "family_relationships"
+  | "property_assets"
+  | "travel_experiences"
+  | "hobbies_skills"
+  | "insurance_protection"
+  | "daily_personal"
+  // Legacy aliases:
   | "mind_soul"
   | "time_action"
   | "health"
@@ -36,6 +54,8 @@ interface LifeOSState {
   calendarLayers: string[];
   calendarLayerMode: "type" | "domain";
   journalEditId: string | null;
+  activeCoachType: string;
+  vaultFilterCategory: string | null;
 
   setView: (v: ViewKey) => void;
   openProject: (id: string) => void;
@@ -48,6 +68,8 @@ interface LifeOSState {
   toggleLayer: (id: string) => void;
   setCalendarLayerMode: (m: "type" | "domain") => void;
   openJournalEditor: (id: string | null) => void;
+  openCoach: (coachType?: string) => void;
+  openVault: (category?: string | null) => void;
 }
 
 export const useLifeOS = create<LifeOSState>((set) => ({
@@ -61,6 +83,8 @@ export const useLifeOS = create<LifeOSState>((set) => ({
   calendarLayers: [],
   calendarLayerMode: "type",
   journalEditId: null,
+  activeCoachType: "unified",
+  vaultFilterCategory: null,
 
   setView: (v) => set({ view: v, selectedProjectId: null }),
   openProject: (id) => set({ view: "projects", selectedProjectId: id }),
@@ -78,4 +102,6 @@ export const useLifeOS = create<LifeOSState>((set) => ({
     })),
   setCalendarLayerMode: (m) => set({ calendarLayerMode: m, calendarLayers: [] }),
   openJournalEditor: (id) => set({ view: "journal", journalEditId: id, itemDetailId: null }),
+  openCoach: (coachType = "unified") => set({ view: "coaches", activeCoachType: coachType }),
+  openVault: (category = null) => set({ view: "vault", vaultFilterCategory: category }),
 }));

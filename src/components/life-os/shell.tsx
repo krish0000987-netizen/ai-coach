@@ -12,6 +12,11 @@ import { NotificationManager } from "./notifications";
 import { OnboardingFlow } from "./onboarding-flow";
 import { AnimatePresence, motion } from "framer-motion";
 import { DashboardView } from "./views/dashboard-view";
+import { VaultView } from "./views/vault-view";
+import { CoachesView } from "./views/coaches-view";
+import { RemindersView } from "./views/reminders-view";
+import { TimelineView } from "./views/timeline-view";
+import { FamilyView } from "./views/family-view";
 import { InboxView } from "./views/inbox-view";
 import { CalendarView } from "./views/calendar-view";
 import { ProjectsView } from "./views/projects-view";
@@ -31,7 +36,7 @@ import { useEffect } from "react";
 export function Shell() {
   const { view, setQuickCaptureOpen, setCommandOpen, setView } = useLifeOS();
 
-  // global hotkeys: "/" focuses search, "g + key" Vim-style navigation
+  // Global hotkeys: "/" focuses search, "g + key" navigation
   useEffect(() => {
     let gPressed = false;
     let gTimer: ReturnType<typeof setTimeout> | null = null;
@@ -43,7 +48,7 @@ export function Shell() {
 
       if (e.key === "/") {
         e.preventDefault();
-        const input = document.querySelector<HTMLInputElement>('input[placeholder="Search your brain…"]');
+        const input = document.querySelector<HTMLInputElement>('input[placeholder*="Search"]');
         input?.focus();
         return;
       }
@@ -51,8 +56,19 @@ export function Shell() {
       // g + key navigation
       if (gPressed) {
         const map: Record<string, any> = {
-          d: "dashboard", i: "inbox", c: "calendar", a: "agenda",
-          f: "focus", p: "projects", g: "graph", r: "reviews", s: "insights", n: "sanctuary",
+          d: "dashboard",
+          v: "vault",
+          a: "coaches",
+          e: "reminders",
+          t: "timeline",
+          m: "family",
+          i: "inbox",
+          c: "calendar",
+          f: "focus",
+          p: "projects",
+          g: "graph",
+          r: "reviews",
+          s: "insights",
         };
         const target = map[e.key.toLowerCase()];
         if (target) {
@@ -67,7 +83,9 @@ export function Shell() {
       if (e.key.toLowerCase() === "g" && !e.metaKey && !e.ctrlKey) {
         gPressed = true;
         if (gTimer) clearTimeout(gTimer);
-        gTimer = setTimeout(() => { gPressed = false; }, 800);
+        gTimer = setTimeout(() => {
+          gPressed = false;
+        }, 800);
         return;
       }
     }
@@ -94,7 +112,7 @@ export function Shell() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.18 }}
               >
                 <ViewSwitcher view={view} />
               </motion.div>
@@ -117,6 +135,11 @@ export function Shell() {
 
 function ViewSwitcher({ view }: { view: string }) {
   if (view === "dashboard") return <DashboardView />;
+  if (view === "vault") return <VaultView />;
+  if (view === "coaches") return <CoachesView />;
+  if (view === "reminders") return <RemindersView />;
+  if (view === "timeline") return <TimelineView />;
+  if (view === "family") return <FamilyView />;
   if (view === "inbox") return <InboxView />;
   if (view === "calendar") return <CalendarView />;
   if (view === "agenda") return <AgendaView />;
@@ -129,7 +152,7 @@ function ViewSwitcher({ view }: { view: string }) {
   if (view === "insights") return <InsightsView />;
   if (view === "all") return <AllItemsView />;
   if (view === "settings") return <SettingsView />;
-  // domains
+  // Category / domain view (all 11 life categories)
   return <DomainView domainKey={view} />;
 }
 
@@ -138,24 +161,17 @@ function Footer({ onQuickCapture, onCommand }: { onQuickCapture: () => void; onC
     <footer className="mt-auto border-t border-border/60 bg-background/60 px-4 py-4 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row">
         <div className="flex items-center gap-1.5">
-          <Icon name="Brain" className="h-3.5 w-3.5 text-emerald-500" />
-          <span className="font-medium">Life OS</span>
+          <Icon name="Brain" className="h-3.5 w-3.5 text-indigo-500" />
+          <span className="font-semibold text-foreground">AI Life Coach</span>
           <span className="text-muted-foreground/60">·</span>
-          <span>Your digital brain, interconnected.</span>
+          <span>Personal Data Vault & Interconnected AI Coaching.</span>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={onCommand} className="hidden items-center gap-1 hover:text-foreground sm:inline-flex">
-            <kbd className="rounded border border-border bg-muted px-1">⌘P</kbd> command
+            <kbd className="rounded border border-border bg-muted px-1 font-mono text-[10px]">⌘P</kbd> command
           </button>
           <span className="hidden text-muted-foreground/60 sm:inline">·</span>
-          <span className="hidden sm:inline">
-            <kbd className="rounded border border-border bg-muted px-1">⌘K</kbd> capture
-            <span className="mx-1">·</span>
-            <kbd className="rounded border border-border bg-muted px-1">⌘P</kbd> command
-            <span className="mx-1">·</span>
-            <kbd className="rounded border border-border bg-muted px-1">?</kbd> help
-          </span>
-          <button onClick={onQuickCapture} className="inline-flex items-center gap-1 text-emerald-600 hover:underline dark:text-emerald-400">
+          <button onClick={onQuickCapture} className="inline-flex items-center gap-1 text-indigo-600 hover:underline dark:text-indigo-400">
             <Icon name="Zap" className="h-3 w-3" /> Quick Capture
           </button>
         </div>

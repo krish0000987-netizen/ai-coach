@@ -270,46 +270,75 @@ export function SettingsView() {
       </Dialog>
 
       {/* AI Features */}
-      <SectionCard title="AI Features" icon="Bot">
+      <SectionCard title="AI Life Coaches & OpenRouter" icon="Bot">
         <div className="space-y-4">
-          <ToggleRow icon="Bot" color="#a78bfa" title="Enable AI features" desc="Master toggle for all AI-powered features" checked={prefs?.aiEnabled ?? true} onChange={(v) => updatePrefs({ aiEnabled: v })} />
+          <ToggleRow
+            icon="Bot"
+            color="#a78bfa"
+            title="Enable AI Coaching Engine"
+            desc="Master toggle for all 6 specialized AI coaches & predictive audits"
+            checked={prefs?.aiEnabled ?? true}
+            onChange={(v) => updatePrefs({ aiEnabled: v })}
+          />
 
           {prefs?.aiEnabled && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-              <ToggleRow icon="Inbox" color="#f59e0b" title="Smart Inbox Processing" desc="AI suggests type, domain & project for inbox items" checked={prefs?.aiSmartInbox ?? true} onChange={(v) => updatePrefs({ aiSmartInbox: v })} />
-
               <div>
                 <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">AI Provider</Label>
-                <Select value={prefs?.aiProvider || "z-ai-sdk"} onValueChange={(v) => updatePrefs({ aiProvider: v })}>
+                <Select value={prefs?.aiProvider || "openrouter"} onValueChange={(v) => updatePrefs({ aiProvider: v })}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="z-ai-sdk">Z.AI SDK (default, free)</SelectItem>
-                    <SelectItem value="openai-compatible">OpenAI-compatible (OpenAI, Groq, Together, etc.)</SelectItem>
-                    <SelectItem value="custom">Custom endpoint</SelectItem>
+                    <SelectItem value="openrouter">OpenRouter (Recommended - Free Model Supported)</SelectItem>
+                    <SelectItem value="demo">Free Demo Mode (Verified Local Data Only)</SelectItem>
+                    <SelectItem value="openai-compatible">OpenAI-compatible API</SelectItem>
+                    <SelectItem value="custom">Custom Endpoint</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {prefs?.aiProvider === "z-ai-sdk" && "Uses the built-in z-ai-web-dev-sdk. No configuration needed."}
-                  {prefs?.aiProvider === "openai-compatible" && "Works with any OpenAI-compatible API. Enter your API key and base URL below."}
-                  {prefs?.aiProvider === "custom" && "Enter a custom API endpoint, key, and model name."}
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {(!prefs?.aiProvider || prefs?.aiProvider === "openrouter") &&
+                    "Uses OpenRouter chat completion API with free models (default: openrouter/free). If no key is entered, the app gracefully operates in Demo Mode."}
+                  {prefs?.aiProvider === "demo" &&
+                    "Generates instant high-quality recommendations grounded in your database records without calling external APIs."}
+                  {prefs?.aiProvider === "openai-compatible" &&
+                    "Connect to OpenAI, Groq, Together, Ollama, or any compatible provider."}
                 </p>
               </div>
 
-              {(prefs?.aiProvider === "openai-compatible" || prefs?.aiProvider === "custom") && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 rounded-lg border border-border/40 p-3">
+              {(prefs?.aiProvider === "openrouter" || prefs?.aiProvider === "openai-compatible" || prefs?.aiProvider === "custom") && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
                   <div>
-                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">API Key {prefs?.hasApiKey && "(saved)"}</Label>
-                    <Input type="password" placeholder={prefs?.hasApiKey ? "•••••••• (saved)" : "sk-..."} onChange={(e) => { if (e.target.value) updatePrefs({ aiApiKey: e.target.value }); }} className="h-9" />
+                    <div className="flex items-center justify-between mb-1">
+                      <Label className="block text-[11px] font-semibold text-muted-foreground">
+                        API Key {prefs?.hasApiKey ? "(Saved)" : "(Optional for Demo Mode)"}
+                      </Label>
+                      <a
+                        href="https://openrouter.ai/keys"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-indigo-500 hover:underline"
+                      >
+                        Get Free OpenRouter Key ↗
+                      </a>
+                    </div>
+                    <Input
+                      type="password"
+                      placeholder={prefs?.hasApiKey ? "•••••••••••• (Saved on Server)" : "sk-or-v1-..."}
+                      onChange={(e) => { if (e.target.value) updatePrefs({ aiApiKey: e.target.value }); }}
+                      className="h-9 font-mono text-xs"
+                    />
                   </div>
                   <div>
-                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">Base URL</Label>
-                    <Input value={prefs?.aiBaseUrl || ""} onChange={(e) => updatePrefs({ aiBaseUrl: e.target.value })} placeholder="https://api.openai.com/v1" className="h-9" />
+                    <Label className="mb-1 block text-[11px] font-semibold text-muted-foreground">Model Identifier</Label>
+                    <Input
+                      value={prefs?.aiModel || "openrouter/free"}
+                      onChange={(e) => updatePrefs({ aiModel: e.target.value })}
+                      placeholder="openrouter/free"
+                      className="h-9 font-mono text-xs"
+                    />
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      Free models include: <code>openrouter/free</code>, <code>meta-llama/llama-3.3-70b-instruct:free</code>, or any model ID.
+                    </p>
                   </div>
-                  <div>
-                    <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">Model</Label>
-                    <Input value={prefs?.aiModel || ""} onChange={(e) => updatePrefs({ aiModel: e.target.value })} placeholder="gpt-4o-mini" className="h-9" />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Works with: OpenAI, Groq, Together AI, Anyscale, Ollama, LM Studio, and any OpenAI-compatible API.</p>
                 </motion.div>
               )}
             </motion.div>
@@ -317,47 +346,41 @@ export function SettingsView() {
         </div>
       </SectionCard>
 
-      {/* Appearance & Notifications */}
-      <SectionCard title="Appearance & Notifications" icon="Palette">
+      {/* Database & Storage */}
+      <SectionCard title="Database & Storage Architecture" icon="Database">
         <div className="space-y-3">
-          <div>
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">Theme</Label>
-            <Select value={theme} onValueChange={(v) => applyTheme(v as any)}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="light">Light</SelectItem><SelectItem value="dark">Dark</SelectItem><SelectItem value="system">System</SelectItem></SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-border/40 p-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><Icon name="Bell" className="h-4 w-4" /></span>
-              <div><p className="text-sm font-medium">Browser notifications</p><p className="text-[11px] text-muted-foreground">Overdue & due task alerts</p></div>
-            </div>
-            <Button size="sm" variant="outline" onClick={async () => { const g = await requestNotificationPermission(); if (g) { notify.success("Notifications enabled"); sendNotification("Life OS", "Enabled!"); } else notify.error("Permission denied"); }}>Enable</Button>
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* Database */}
-      <SectionCard title="Database" icon="Database">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-lg border border-border/40 p-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Icon name="HardDrive" className="h-4 w-4" /></span>
-            <div className="flex-1">
-              <p className="text-sm font-medium">SQLite (local file)</p>
-              <p className="text-[11px] text-muted-foreground">Current database — stored at <code className="rounded bg-muted px-1 text-[10px]">db/custom.db</code></p>
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              <Icon name="Database" className="h-5 w-5" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-foreground">Supabase PostgreSQL</p>
+                <span className="rounded-full bg-emerald-500/20 px-2 py-0.2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                  Connected
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">
+                Project: <code className="font-mono">gnmrydmjcrsxxxroinqi</code> · 11 Domains · Row-Level Protection
+              </p>
             </div>
           </div>
 
-          <div className="rounded-lg border border-border/40 p-3">
-            <p className="mb-2 text-xs font-medium">Want to use a cloud database?</p>
-            <p className="text-[11px] text-muted-foreground">Life OS supports any PostgreSQL database. To switch:</p>
-            <ol className="mt-1.5 space-y-1 text-[11px] text-muted-foreground">
-              <li>1. Create a free database on <a href="https://neon.tech" target="_blank" className="text-blue-500 hover:underline">Neon</a> or <a href="https://supabase.com" target="_blank" className="text-blue-500 hover:underline">Supabase</a></li>
-              <li>2. Set <code className="rounded bg-muted px-1">DATABASE_URL</code> in your <code className="rounded bg-muted px-1">.env</code> file</li>
-              <li>3. Change Prisma provider from <code className="rounded bg-muted px-1">sqlite</code> to <code className="rounded bg-muted px-1">postgresql</code></li>
-              <li>4. Run <code className="rounded bg-muted px-1">bun run db:push</code></li>
-            </ol>
-            <p className="mt-2 text-[10px] text-muted-foreground">PostgreSQL connection string format: <code className="rounded bg-muted px-1">postgresql://user:pass@host/dbname</code></p>
+          <div className="flex items-center gap-3 rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+              <Icon name="ShieldCheck" className="h-5 w-5" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-foreground">Private Document Vault Storage</p>
+                <span className="rounded-full bg-indigo-500/20 px-2 py-0.2 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                  Active
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">
+                Supabase Bucket: <code className="font-mono">vault</code> (Private) · Signed URLs with 1-hr TTL
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">

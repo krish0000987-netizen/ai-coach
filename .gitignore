@@ -10,6 +10,7 @@ build/
 
 # Production
 dist/
+*.tsbuildinfo
 
 # Environment files
 .env

@@ -1,237 +1,150 @@
-# Life OS — Your Digital Brain
+# AI Life Coach & Personal Operating System
 
-A comprehensive, open-source personal operating system that brings harmony, focus, and connection to every aspect of your life. Built with Next.js 16, TypeScript, Tailwind CSS, and Prisma.
+An interconnected personal data vault, life-management operating system, and AI coaching platform that helps you organize your entire life — from birth certificates to wills — across 11 life categories, with 6 specialized AI coaches powered by OpenRouter.
 
-Life OS is for people looking for an open-source second brain, self-hosted productivity app, personal knowledge management system, digital brain, habit tracker app, journal app, task manager, daily planner, goal tracker, focus timer, calendar planner, finance tracker, and connected life dashboard.
-
-## Live Demo
-
-Try Life OS at [life-os-me.vercel.app](https://life-os-me.vercel.app/).
-
-Demo account:
-- Email: `demo@gmail.com`
-- Password: `Password123`
-
-## Screenshots
-
-| Public landing page                                                              | Dashboard                                                                 |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| <img src="./public/screenshots/landing.jpg" alt="Life OS public landing page" /> | <img src="./public/screenshots/dashboard.jpeg" alt="Life OS dashboard" /> |
-
-| Digital Brain graph                                                                   | Insights                                                                    |
-| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| <img src="./public/screenshots/brain-graph.jpeg" alt="Life OS digital brain graph" /> | <img src="./public/screenshots/insight.jpeg" alt="Life OS insights view" /> |
-
-## ✨ Features
-
-### The Digital Brain
-
-Everything is an interconnected "node" — tasks, notes, journals, habits, finances, contacts, ideas, goals, and more. Bi-directional linking means your data comes alive.
-
-- **17 item types** with type-aware UI (tasks, journals, habits, finances, contacts, books, movies, etc.)
-- **Bi-directional linking** — connect any item to any other item
-- **Brain Graph** — visual force-directed network of your interconnected life
-- **8 life domains** — Mind & Soul, Time & Action, Health, Wealth, Network, Growth, Creativity, Admin
-
-### Master Calendar
-
-One calendar that auto-aggregates anything with a date — tasks, bills, appointments, birthdays. Toggle layers to view your life through different lenses.
-
-### Quick Capture (⌘K)
-
-Capture a thought instantly without deciding where it belongs. Process your inbox later with bulk actions or AI-powered Smart Inbox Processing.
-
-### Focus Timer
-
-Pomodoro timer with custom durations, sound on completion, and automatic habit logging. Connect a focus session to a habit like "Read 20 pages" and it auto-logs when the timer ends.
-
-### Rich Journal Editor
-
-Full-page WYSIWYG editor with formatting toolbar, live word count, mood tracking, and auto-save drafts. Your thoughts deserve more than a text box.
-
-### Reviews & Reflections
-
-Daily and weekly guided reflections with mood/energy tracking, wins, challenges, gratitude, and priorities. The dashboard gently prompts you when it's time to reflect.
-
-### Insights Dashboard
-
-Mood trends, habit consistency heatmaps, 30-day activity flow, financial health, and project progress — all visualized.
-
-### Sanctuary
-
-A calm space for guided breathing exercises, daily affirmations, and life visions.
-
-### Authentication
-
-- Email/password registration and login
-- Optional 2FA (TOTP) — off by default, toggle in Settings
-- QR code login — sign in on another device by scanning a QR code from Settings
-- Protected routes via middleware
-
-### AI Features (Optional)
-
-- **Smart Inbox Processing** — AI suggests type, domain, and project for inbox items
-- Configurable AI provider: Z.AI SDK (default, free), OpenAI-compatible (OpenAI, Groq, Together, etc.), or custom endpoint
-- Can be turned on/off in Settings
-
-### PWA Support
-
-Installable on desktop and mobile. Works as a standalone app.
-
-### More
-
-- Keyboard shortcuts (⌘K capture, ⌘P command palette, g+key Vim navigation, ? for help)
-- Browser notifications for overdue tasks
-- Onboarding flow for new users
-- Full data backup/restore (JSON export/import)
-- CSV export for finances, reviews, and all items
-- Recurring task automation (advances due dates, resets stale streaks)
-- Dark mode with system theme detection
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+ or Bun
-- A database (SQLite by default, PostgreSQL optional)
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/karim-coder/life-os.git
-cd life-os
-
-# Install dependencies
-bun install
-
-# Set up the database
-cp .env.example .env
-bun run db:push
-
-# Optional: add sample data
-bun run src/lib/seed.ts
-
-# Start the development server
-bun run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) and create an account.
-
-### Using a Cloud Database (Neon / Supabase)
-
-1. Create a free PostgreSQL database on [Neon](https://neon.tech) or [Supabase](https://supabase.com)
-2. Update your `.env` file:
-   ```env
-   DATABASE_URL=postgresql://user:pass@host/dbname
-   ```
-3. Update `prisma/schema.prisma` — change the provider from `sqlite` to `postgresql`:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-4. Run `bun run db:push`
-
-## 📖 Documentation
-
-### Architecture
-
-- **Framework**: Next.js 16 with App Router
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 4 + shadcn/ui
-- **Database**: Prisma ORM (SQLite or PostgreSQL)
-- **State**: Zustand (client) + TanStack Query (server)
-- **Auth**: Custom session-based with optional TOTP 2FA
-- **AI**: Z.AI SDK (default) or any OpenAI-compatible API
-
-### Project Structure
-
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── api/                # API routes (items, projects, auth, ai, etc.)
-│   ├── app/                # Authenticated Life OS interface
-│   ├── login/              # Authentication page
-│   └── page.tsx            # Public landing page
-├── components/
-│   ├── life-os/            # Core app components
-│   │   ├── views/          # Dashboard, Inbox, Calendar, Focus, etc.
-│   │   ├── item-card.tsx   # Universal item card
-│   │   ├── item-editor.tsx # Create/edit dialog
-│   │   └── ...
-│   └── ui/                 # shadcn/ui components
-├── lib/                    # Utilities, hooks, auth, constants
-├── store/                  # Zustand store
-└── prisma/                 # Database schema
-```
-
-### Keyboard Shortcuts
-
-| Shortcut     | Action          |
-| ------------ | --------------- |
-| `⌘K`         | Quick Capture   |
-| `⌘P`         | Command Palette |
-| `/`          | Focus search    |
-| `?`          | Show shortcuts  |
-| `g` then `d` | Dashboard       |
-| `g` then `i` | Inbox           |
-| `g` then `c` | Calendar        |
-| `g` then `f` | Focus           |
-| `g` then `p` | Projects        |
-| `g` then `g` | Brain Graph     |
-| `g` then `r` | Reviews         |
-| `g` then `s` | Insights        |
-| `g` then `n` | Sanctuary       |
-
-## 🐳 Docker
-
-```bash
-# Build and run
-docker-compose up -d
-
-# Or build manually
-docker build -t life-os .
-docker run -p 3000:3000 -v $(pwd)/db:/app/db life-os
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-See [`.env.example`](.env.example) for all available options.
-
-### AI Provider Setup
-
-1. Go to Settings → AI Features
-2. Choose your provider:
-   - **Z.AI SDK** — free, no config needed
-   - **OpenAI-compatible** — enter API key, base URL, and model
-   - **Custom** — enter custom endpoint details
-3. Toggle individual AI features on/off
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## 🔎 GitHub Discoverability
-
-Recommended repository topics: `life-os`, `second-brain`, `digital-brain`, `personal-knowledge-management`, `productivity`, `self-hosted`, `habit-tracker`, `journal-app`, `task-manager`, `calendar-planner`, `finance-tracker`, `goal-tracker`, `focus-timer`, `knowledge-graph`, `nextjs`, `prisma`, `pwa`.
-
-## 📄 License
-
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org) — React framework
-- [shadcn/ui](https://ui.shadcn.com) — UI components
-- [Prisma](https://prisma.io) — Database ORM
-- [MDXEditor](https://mdxeditor.dev) — WYSIWYG editor
-- [Framer Motion](https://framer.com/motion) — Animations
-- [Z.AI](https://z.ai) — AI SDK
+Built upon the open-source **Life OS** architecture and extended into an end-to-end cloud platform with **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS**, **Prisma ORM**, **Supabase PostgreSQL**, **Supabase Auth & Storage**, and **OpenRouter Free Model API**.
 
 ---
 
-Made with 💚 for people who want to live with intention.
+## 🌟 Key Capabilities
+
+### 1. 🗄️ Personal Document Vault
+- **Private Storage**: Stored in a private Supabase Storage bucket (`vault`) with strict user-level authorization and 1-hour signed URLs.
+- **Client & Server Validation**: Enforces MIME-type filtering (PDF, PNG, JPG, WebP, DOCX, TXT) and a 50MB file size limit.
+- **Text Extraction Pipeline**: Automatically extracts and indexes text from uploaded PDFs and notes for instant keyword search.
+- **Predictive Expiry Detection**: Automatically calculates expiry dates (passports, driver's licenses, insurance policies, warranties) and creates proactive renewal reminders.
+
+### 2. 🤖 6 Specialized AI Coaches + Unified Coach
+Powered by OpenRouter with configurable models (defaulting to free models such as `openrouter/free` or `meta-llama/llama-3.3-70b-instruct:free`) and an instant **Free Demo Mode** when no API key is set:
+1. **Health & Wellness Coach**: Medical records organization, lab test analysis preparation, vaccination tracking, and general wellness guidance. *(Strict safety disclaimer: never diagnoses conditions).*
+2. **Financial & Money Coach**: Cash flow breakdown, subscription review, budgeting concepts, and savings progress grounded in your recorded data.
+3. **Career & Work Coach**: CV enhancement, interview preparation, quantifiable achievement tracking, and skill gap roadmaps.
+4. **Life & Mindset Coach**: Goal setting, habit consistency, weekly reviews, and reflective journaling prompts.
+5. **Hobby & Creative Coach**: Creative routines, skill progression, portfolio planning, and practical hobby monetization ideas.
+6. **Predictive Life Coach**: Cross-category synthesis, upcoming renewal audits, overdue milestones, and pattern analysis.
+7. **Unified AI Life Coach**: Central coach with holistic access across all 11 categories.
+
+### 3. 🌐 All 11 Life Categories
+1. **Health & Wellness**: Medical reports, vaccinations, prescriptions, allergies, lab results, appointments, health metrics.
+2. **Financial & Money**: Income, expenses, subscriptions, budgets, savings goals, bank statements, tax returns.
+3. **Education & Learning**: Degrees, diplomas, certifications, courses, books, reading trackers, study plans.
+4. **Career & Work**: Employment history, projects, achievements, qualifications, CVs, portfolios.
+5. **Legal & Government**: Passports, driver's licenses, birth certificates, wills, living trusts, contracts.
+6. **Family & Relationships**: Family members, anniversaries, emergency contacts, shared memories.
+7. **Property & Assets**: Homes, deeds, vehicle titles, warranties, purchase receipts, maintenance schedules.
+8. **Travel & Experiences**: Trips, flight bookings, hotel reservations, itineraries, bucket lists.
+9. **Hobbies & Skills**: Creative work, photography, music, practice sessions, equipment specs, monetization.
+10. **Insurance & Protection**: Health, auto, home, and life policies, coverage details, renewal dates, masked policy numbers.
+11. **Daily Life & Personal**: Journals, daily moods, habits, routines, affirmations, reflections, life milestones.
+
+### 4. ⏰ Predictive Alerts & Expiry Engine
+- Deterministic date auditing:
+  - Documents expiring in 30 days, 7 days, or expired.
+  - Semi-annual and annual insurance policy renewals.
+  - Preventative health checkups (alerts if no health update in 60+ days).
+  - Overdue milestones and goals.
+- Deduplication prevents repetitive duplicate reminders.
+- One-click actions: Snooze (1d, 3d, 7d), Mark Complete, Dismiss, or Consult Predictive Coach.
+
+### 5. 🗺️ Life Timeline & Knowledge Graph
+- Chronological timeline tracking user milestones from user-entered dates across education, career, family, property, health, and travel.
+- Visual force-directed Brain Graph showing bi-directional connections between all records.
+
+### 6. 👨‍👩‍👧‍👦 Family Workspace & Selective Sharing
+- Four access levels: **Owner**, **Administrator**, **Contributor**, and **Read-only Viewer**.
+- Revocable invite tokens with expiration.
+- **Privacy First**: Personal vault documents and private records are isolated by default; only explicitly designated items are shared with the family workspace.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Node.js 18+ or Bun
+- A free [Supabase](https://supabase.com) account (PostgreSQL + Storage)
+- (Optional) A free [OpenRouter](https://openrouter.ai) API key
+
+### 2. Installation
+```bash
+git clone https://github.com/krish0000987-netizen/ai-coach.git
+cd ai-coach
+npm install
+```
+
+### 3. Environment Variables
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+Fill in your Supabase credentials and optional OpenRouter key:
+```env
+DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres"
+SESSION_SECRET="your-super-secure-session-secret"
+
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT_REF].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+
+OPENROUTER_API_KEY="" # Optional for Demo Mode
+OPENROUTER_MODEL="openrouter/free"
+OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
+```
+
+### 4. Database Setup & Seeding
+Apply migrations and seed sample records across all 11 categories:
+```bash
+npx prisma generate
+node scripts/migrate-supabase.js
+bun run src/lib/seed.ts
+```
+
+### 5. Start Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+Demo account credentials:
+- **Email**: `demo@gmail.com`
+- **Password**: `Password123`
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+Run the test and verification suite:
+
+```bash
+# 1. Type checking
+npx tsc --noEmit
+
+# 2. Linting
+npm run lint
+
+# 3. Comprehensive integration tests
+node scripts/test-integration.js
+
+# 4. Production build
+npm run build
+```
+
+---
+
+## ☁️ Deployment on Vercel
+
+1. Connect your repository (`krish0000987-netizen/ai-coach`) on Vercel.
+2. In **Project Settings → Environment Variables**, add:
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `SESSION_SECRET`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `OPENROUTER_API_KEY` (optional)
+   - `OPENROUTER_MODEL` (e.g. `openrouter/free`)
+3. Set the build command to:
+   ```bash
+   prisma generate && next build
+   ```
+4. Deploy!
