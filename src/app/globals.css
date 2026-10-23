@@ -114,6 +114,9 @@
 
 @layer base {
   html {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     scroll-behavior: smooth;
   }
 
@@ -121,6 +124,9 @@
     @apply border-border outline-ring/50;
   }
   body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     @apply bg-background text-foreground;
   }
 }

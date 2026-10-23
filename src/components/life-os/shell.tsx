@@ -102,23 +102,23 @@ export function Shell() {
   const isFullHeightView = view === "coaches" || view === "graph";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="fixed inset-0 flex overflow-hidden bg-background">
       <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col h-full overflow-hidden">
         <Topbar />
         <main
           className={cn(
-            "flex min-h-0 flex-1 flex-col",
-            isFullHeightView ? "overflow-hidden" : "overflow-y-auto"
+            "flex-1 min-h-0 w-full",
+            isFullHeightView ? "overflow-hidden flex flex-col" : "overflow-y-auto"
           )}
         >
           <div
             className={cn(
-              "mx-auto w-full flex-1 flex flex-col",
+              "mx-auto w-full",
               isFullHeightView
-                ? "max-w-7xl h-full p-2 sm:p-4 lg:p-6 min-h-0"
-                : "max-w-6xl px-4 py-6 sm:px-6 lg:px-8"
+                ? "h-full max-w-7xl p-2 sm:p-4 lg:p-6 flex flex-col min-h-0"
+                : "max-w-6xl px-4 py-6 sm:px-6 lg:px-8 flex flex-col min-h-full"
             )}
           >
             <div
@@ -131,7 +131,7 @@ export function Shell() {
             </div>
 
             {!isFullHeightView && (
-              <div className="mt-12">
+              <div className="mt-12 pt-6">
                 <Footer onQuickCapture={() => setQuickCaptureOpen(true)} onCommand={() => setCommandOpen(true)} />
               </div>
             )}
