@@ -99,10 +99,28 @@ export function Shell() {
     fetch("/api/scheduler", { method: "POST" }).catch(() => {});
   }, []);
 
+  // Lock document scrolling exclusively while inside the App Shell
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.height = "100%";
+    document.documentElement.style.overscrollBehavior = "none";
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100%";
+    document.body.style.overscrollBehavior = "none";
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.documentElement.style.height = "";
+      document.documentElement.style.overscrollBehavior = "";
+      document.body.style.overflow = "";
+      document.body.style.height = "";
+      document.body.style.overscrollBehavior = "";
+    };
+  }, []);
+
   const isFullHeightView = view === "coaches" || view === "graph";
 
   return (
-    <div className="fixed inset-0 flex overflow-hidden bg-background">
+    <div data-app-shell className="fixed inset-0 flex overflow-hidden bg-background">
       <Sidebar />
 
       <div className="flex min-w-0 min-h-0 flex-1 flex-col h-full overflow-hidden">
