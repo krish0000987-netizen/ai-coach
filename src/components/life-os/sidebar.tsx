@@ -60,7 +60,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       {/* Scrollable nav */}
-      <ScrollArea className="flex-1 px-3 py-3">
+      <ScrollArea className="flex-1 min-h-0 px-3 py-3">
         {/* Core Suite */}
         <div className="space-y-0.5">
           {CORE_NAV.map((n) => {
@@ -208,7 +208,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden h-full min-h-0 w-64 flex-col border-r border-border/60 bg-sidebar/40 backdrop-blur-sm md:flex overflow-hidden">
+      <aside className="hidden h-full min-h-0 w-64 flex-shrink-0 flex-col border-r border-border/60 bg-sidebar/40 backdrop-blur-sm md:flex overflow-hidden">
         <SidebarContent />
       </aside>
 
@@ -223,7 +223,7 @@ export function Sidebar() {
 
       {/* Mobile sheet */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-72 p-0 flex flex-col">
+        <SheetContent side="left" className="w-72 p-0 flex flex-col gap-0 overflow-hidden h-full">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
             <SheetDescription>Browse categories, coaches, and vault documents.</SheetDescription>
