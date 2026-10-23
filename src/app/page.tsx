@@ -12,10 +12,8 @@ import {
   CircleDot,
   Command,
   Compass,
-  ExternalLink,
   Flame,
   Frown,
-  Github,
   Heart,
   Home,
   Laugh,
@@ -121,12 +119,11 @@ export default function LandingPage() {
             <SmoothScrollLink href="#philosophy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Philosophy</SmoothScrollLink>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-1.5 px-3" asChild>
-              <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer" aria-label="View Life OS on GitHub">
-                <Github className="h-4 w-4" />
-                <span className="hidden sm:inline">GitHub</span>
-              </a>
-            </Button>
+            <Link href="/login">
+              <Button variant="ghost" className="text-sm">
+                Sign in
+              </Button>
+            </Link>
             <Link href="/app">
               <Button className="gap-1.5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-700">
                 Open app <ArrowRight className="h-4 w-4" />
@@ -179,11 +176,6 @@ export default function LandingPage() {
                 Explore features
               </Button>
             </SmoothScrollLink>
-            <Button size="lg" variant="ghost" className="h-12 gap-2 px-6 text-base" asChild>
-              <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer">
-                <Github className="h-5 w-5" /> View source
-              </a>
-            </Button>
           </div>
 
           <p className="mt-4 text-xs text-muted-foreground">
@@ -630,11 +622,6 @@ export default function LandingPage() {
               Open Life OS <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline" className="ml-0 mt-3 h-14 gap-2 px-8 text-base sm:ml-3 sm:mt-0" asChild>
-            <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer">
-              <Github className="h-5 w-5" /> GitHub <ExternalLink className="h-4 w-4" />
-            </a>
-          </Button>
         </div>
       </section>
 
@@ -652,9 +639,6 @@ export default function LandingPage() {
             <SmoothScrollLink href="#features" className="hover:text-foreground">Features</SmoothScrollLink>
             <SmoothScrollLink href="#domains" className="hover:text-foreground">Domains</SmoothScrollLink>
             <SmoothScrollLink href="#philosophy" className="hover:text-foreground">Philosophy</SmoothScrollLink>
-            <a href={siteConfig.repositoryUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground">
-              <Github className="h-3.5 w-3.5" /> GitHub
-            </a>
             <Link href="/app" className="hover:text-foreground">Open app</Link>
           </div>
         </div>
