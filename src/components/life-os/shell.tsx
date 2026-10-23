@@ -31,6 +31,7 @@ import { SanctuaryView } from "./views/sanctuary-view";
 import { JournalEditorView } from "./views/journal-editor-view";
 import { SettingsView } from "./views/settings-view";
 import { Icon } from "./icon";
+import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 
 export function Shell() {
@@ -98,14 +99,28 @@ export function Shell() {
     fetch("/api/scheduler", { method: "POST" }).catch(() => {});
   }, []);
 
+  const isFullHeightView = view === "coaches" || view === "graph";
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
-        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <main
+          className={cn(
+            "flex min-h-0 flex-1 flex-col",
+            isFullHeightView ? "overflow-hidden" : "overflow-y-auto"
+          )}
+        >
+          <div
+            className={cn(
+              "mx-auto w-full flex-1 flex flex-col min-h-0",
+              isFullHeightView
+                ? "max-w-7xl h-full p-2 sm:p-4 lg:p-6"
+                : "max-w-6xl px-4 py-6 sm:px-6 lg:px-8 min-h-[calc(100vh-9rem)]"
+            )}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={view}
@@ -113,12 +128,15 @@ export function Shell() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.18 }}
+                className={cn("flex-1 flex flex-col min-h-0", isFullHeightView && "h-full")}
               >
                 <ViewSwitcher view={view} />
               </motion.div>
             </AnimatePresence>
           </div>
-          <Footer onQuickCapture={() => setQuickCaptureOpen(true)} onCommand={() => setCommandOpen(true)} />
+          {!isFullHeightView && (
+            <Footer onQuickCapture={() => setQuickCaptureOpen(true)} onCommand={() => setCommandOpen(true)} />
+          )}
         </main>
       </div>
 

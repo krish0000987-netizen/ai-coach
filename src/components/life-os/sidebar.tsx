@@ -16,13 +16,16 @@ import {
 } from "@/components/ui/sheet";
 import { useState } from "react";
 
-const NAV = [
+const CORE_NAV = [
   { key: "dashboard", name: "Dashboard", icon: "LayoutDashboard" },
+  { key: "coaches", name: "6 AI Coaches", icon: "Sparkles", highlight: true },
   { key: "vault", name: "Document Vault", icon: "ShieldCheck" },
-  { key: "coaches", name: "6 AI Coaches", icon: "Sparkles" },
   { key: "reminders", name: "Alerts & Expiries", icon: "BellRing" },
   { key: "timeline", name: "Life Timeline", icon: "Milestone" },
   { key: "family", name: "Family Workspace", icon: "Users" },
+] as const;
+
+const OS_NAV = [
   { key: "inbox", name: "Inbox", icon: "Inbox" },
   { key: "calendar", name: "Calendar", icon: "CalendarDays" },
   { key: "focus", name: "Focus & Flow", icon: "Brain" },
@@ -58,8 +61,56 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       {/* Scrollable nav */}
       <ScrollArea className="flex-1 px-3 py-3">
+        {/* Core Suite */}
         <div className="space-y-0.5">
-          {NAV.map((n) => {
+          {CORE_NAV.map((n) => {
+            const active = view === n.key;
+            return (
+              <button
+                key={n.key}
+                onClick={() => nav(n.key)}
+                className={cn(
+                  "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold shadow-xs"
+                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                  (n as any).highlight && !active && "text-foreground font-medium"
+                )}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-indigo-600"
+                  />
+                )}
+                <Icon
+                  name={n.icon}
+                  className={cn(
+                    "h-4 w-4",
+                    active
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : (n as any).highlight
+                      ? "text-amber-500"
+                      : ""
+                  )}
+                />
+                <span className="flex-1 text-left">{n.name}</span>
+                {(n as any).highlight && (
+                  <span className="rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                    AI
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Operating System */}
+        <div className="mt-4 mb-1.5 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+          Life OS Tools
+        </div>
+        <div className="space-y-0.5">
+          {OS_NAV.map((n) => {
             const active = view === n.key;
             const badge = n.key === "inbox" && inboxCount > 0 ? inboxCount : null;
             return (
@@ -67,7 +118,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 key={n.key}
                 onClick={() => nav(n.key)}
                 className={cn(
-                  "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all",
+                  "group relative flex w-full items-center gap-3 rounded-xl px-3 py-1.5 text-xs font-medium transition-all",
                   active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-bold shadow-xs"
                     : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
