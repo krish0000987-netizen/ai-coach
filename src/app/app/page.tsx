@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Shell } from "@/components/life-os/shell";
+import { ShellClient } from "@/components/life-os/shell-client";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function AppPage() {
-  return <Shell />;
+  return <ShellClient />;
 }

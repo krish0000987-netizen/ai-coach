@@ -10,7 +10,7 @@ import { CommandPalette } from "./command-palette";
 import { ShortcutsHelp } from "./shortcuts-help";
 import { NotificationManager } from "./notifications";
 import { OnboardingFlow } from "./onboarding-flow";
-import { AnimatePresence, motion } from "framer-motion";
+import { ViewErrorBoundary } from "./error-boundary";
 import { DashboardView } from "./views/dashboard-view";
 import { VaultView } from "./views/vault-view";
 import { CoachesView } from "./views/coaches-view";
@@ -121,18 +121,14 @@ export function Shell() {
                 : "max-w-6xl px-4 py-6 sm:px-6 lg:px-8"
             )}
           >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={view}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.18 }}
-                className={cn("w-full flex-1 flex flex-col", isFullHeightView && "h-full min-h-0")}
-              >
+            <div
+              key={view}
+              className={cn("w-full flex-1 flex flex-col", isFullHeightView && "h-full min-h-0")}
+            >
+              <ViewErrorBoundary view={view} onReset={() => setView("dashboard")}>
                 <ViewSwitcher view={view} />
-              </motion.div>
-            </AnimatePresence>
+              </ViewErrorBoundary>
+            </div>
 
             {!isFullHeightView && (
               <div className="mt-12">

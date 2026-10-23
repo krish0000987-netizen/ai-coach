@@ -37,8 +37,13 @@ export function DashboardView() {
       .catch(() => {});
   }, []);
 
+  const [greeting, setGreeting] = useState("Good day");
   const today = new Date();
-  const greeting = today.getHours() < 12 ? "Good morning" : today.getHours() < 18 ? "Good afternoon" : "Good evening";
+
+  useEffect(() => {
+    const hours = new Date().getHours();
+    setGreeting(hours < 12 ? "Good morning" : hours < 18 ? "Good afternoon" : "Good evening");
+  }, []);
 
   const tasks = todayData?.items || [];
   const tasksToday = tasks.filter((t) => {
