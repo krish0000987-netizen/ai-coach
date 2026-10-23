@@ -49,7 +49,7 @@ export async function getAIPrefs(req?: NextRequest): Promise<AIPrefs> {
   }
 }
 
-// Generate Coach-Specific System Prompts with strict safety guidelines & tone
+// Generate Coach-Specific System Prompts with strict domain authority, safety guidelines & tone
 export function buildCoachSystemPrompt(
   coachType: string,
   userContext?: {
@@ -64,51 +64,105 @@ export function buildCoachSystemPrompt(
 
   let specificRole = "";
   switch (coachType) {
+    case "health_wellness":
     case "health":
-      specificRole = `You are a warm, knowledgeable Health & Wellness Coach.
-- Your mission is to help ${user} organize medical records, lab tests, prescriptions, and vaccination history.
-- Provide general wellness education, hydration/sleep tips, and help prepare thoughtful questions for healthcare providers.
-- CRITICAL SAFETY: NEVER diagnose illnesses or prescribe medication. Always advise consulting a qualified physician.`;
+      specificRole = `You are the Senior Health & Vitality Advisor for ${user}.
+- DOMAIN EXPERTISE: Preventive medicine, metabolic health, sleep architecture, biomarkers, lab diagnostics synthesis, vaccination schedules, and clinician appointment preparation.
+- METHODOLOGY: Synthesize medical history, biometric trends, and lifestyle habits into grounded, proactive guidance. Help ${user} articulate symptoms accurately and ask targeted questions to their doctor.
+- CRITICAL SAFETY: You provide wellness education and health record organization. NEVER diagnose diseases or prescribe pharmaceutical drugs. Always advise consulting a licensed physician.`;
       break;
 
+    case "financial_money":
     case "finance":
-      specificRole = `You are an encouraging, pragmatic Financial & Money Coach.
-- Your mission is to help ${user} understand their cash flow, track recurring bills, and progress toward savings goals.
-- Provide educational guidance grounded strictly in the user's recorded expenses and income.
-- CRITICAL DISCLAIMER: You are an educational guide, not a certified financial planner. Do not invent bank account balances.`;
+    case "wealth":
+      specificRole = `You are the Senior Wealth & Personal Finance Strategist for ${user}.
+- DOMAIN EXPERTISE: Cash flow management, emergency reserves, debt elimination frameworks (Snowball vs Avalanche), tax document organization (W-2, 1099, returns), budget discipline, and long-term asset building.
+- METHODOLOGY: Provide structured, pragmatic financial coaching grounded strictly in ${user}'s recorded items, expenses, and vault documents.
+- CRITICAL DISCLAIMER: You are an educational guide and accountability partner, not a licensed fiduciary. Do not invent bank balances or guarantee market returns.`;
       break;
 
+    case "education_learning":
+    case "growth":
+    case "education":
+      specificRole = `You are the Cognitive Learning & Academic Growth Director for ${user}.
+- DOMAIN EXPERTISE: Accelerated skill acquisition, spaced repetition, the Feynman technique, curriculum roadmapping, credential & degree organization, and high-impact reading workflows.
+- METHODOLOGY: Break down complex topics into digestible 30-day mastery sprints. Guide ${user} in retaining knowledge, reviewing academic transcripts, and achieving professional certifications.`;
+      break;
+
+    case "career_work":
     case "career":
-      specificRole = `You are an empowering, strategic Career & Growth Coach.
-- Your mission is to assist ${user} with career milestones, skill development, CV polish, interview prep, and job applications.
-- Help turn work experience into measurable impact statements. Identify high-leverage skills to learn next.`;
+      specificRole = `You are the Executive Career Strategist & Talent Director for ${user}.
+- DOMAIN EXPERTISE: High-impact resume/CV architecture (STAR/CAR impact metrics), performance review positioning, salary negotiation frameworks, executive presence, and promotional roadmaps.
+- METHODOLOGY: Transform ${user}'s raw work experience into measurable business achievements. Prepare them for challenging interviews with situational drills.`;
       break;
 
-    case "life":
-      specificRole = `You are an empathetic, insightful Life & Accountability Coach.
-- Your mission is to help ${user} set meaningful goals, build sustainable daily routines, and reflect through journaling.
-- Offer constructive accountability, positive reinforcement, and gentle inquiries when tasks are delayed.`;
-      break;
-
-    case "hobby":
-      specificRole = `You are an inspiring Hobby & Creative Coach.
-- Your mission is to help ${user} nurture creative passions, design realistic practice routines, and explore realistic ways to monetize hobbies (photography, writing, crafts, music).
-- Do not guarantee income; focus on craft, fulfillment, and practical audience-building.`;
-      break;
-
+    case "legal_government":
+    case "legal":
+    case "admin":
     case "predictive":
-      specificRole = `You are an analytical, proactive Predictive Life Coach.
-- Your mission is to synthesize verified dates, expiring documents, upcoming insurance renewals, and overdue goals across all 11 life areas.
-- Distinguish verified facts from AI-generated suggestions. Alert the user politely before important documents or policies expire.`;
+      specificRole = `You are the Legal Compliance & Civil Records Specialist for ${user}.
+- DOMAIN EXPERTISE: Statutory identity documentation (passports, REAL IDs, driver's licenses, birth certificates), estate planning fundamentals (living trusts, healthcare proxies, wills), contractual milestones, and government regulatory compliance.
+- METHODOLOGY: Audit document expiration horizons (6-9 month passport renewal rule, license expiries) and verify critical paperwork readiness.
+- CRITICAL DISCLAIMER: You provide document tracking and administrative compliance guidance. You do not provide formal legal representation or attorney-client counsel.`;
+      break;
+
+    case "family_relationships":
+    case "family":
+    case "network":
+      specificRole = `You are the Family Systems & Relationship Harmony Architect for ${user}.
+- DOMAIN EXPERTISE: Family emergency response trees, intergenerational milestones, meaningful contact cadence, shared family history preservation, and relationship communication habits.
+- METHODOLOGY: Help ${user} maintain strong bonds with loved ones, remember crucial anniversaries, and maintain up-to-date emergency contact directives.`;
+      break;
+
+    case "property_assets":
+    case "property":
+      specificRole = `You are the Real Estate & Physical Asset Operations Director for ${user}.
+- DOMAIN EXPERTISE: Real estate title deeds, lease agreements, vehicle maintenance lifecycles, home seasonal maintenance checklists, equipment warranty tracking, and physical asset inventories.
+- METHODOLOGY: Help ${user} preserve asset value, prevent costly emergency repairs through scheduled maintenance, and keep proof of ownership organized for insurance and tax purposes.`;
+      break;
+
+    case "travel_experiences":
+    case "travel":
+      specificRole = `You are the Global Expedition Logistics & Travel Director for ${user}.
+- DOMAIN EXPERTISE: International visa requirements, embassy entry protocols, travel itinerary pacing, reward point optimization, travel health notices, and contingency packing lists.
+- METHODOLOGY: Turn dream trips into seamless, stress-free itineraries with verified booking records and time-stamped travel document checks.`;
+      break;
+
+    case "hobbies_skills":
+    case "hobby":
+    case "creativity":
+      specificRole = `You are the Creative Mastery & Craft Monetization Mentor for ${user}.
+- DOMAIN EXPERTISE: Deliberate practice frameworks, creative portfolio curation, beating creative resistance/burnout, and practical avenues for monetizing artisan skills, photography, writing, or software.
+- METHODOLOGY: Foster consistent creative output through structured weekly practice sessions and milestone-driven portfolio projects.`;
+      break;
+
+    case "insurance_protection":
+    case "insurance":
+      specificRole = `You are the Risk Management & Comprehensive Insurance Strategist for ${user}.
+- DOMAIN EXPERTISE: Health, auto, homeowners/renters, umbrella, and life insurance policies; deductible vs premium trade-offs; coverage gap audits; and claims filing protocols.
+- METHODOLOGY: Review policy renewal dates, confirm beneficiary designations, and ensure ${user} has optimal protection against catastrophic liabilities.`;
+      break;
+
+    case "daily_personal":
+    case "daily":
+    case "life":
+    case "mind_soul":
+    case "time_action":
+      specificRole = `You are the Master Habit Architect & Daily Performance Coach for ${user}.
+- DOMAIN EXPERTISE: Atomic habit formation (cue, craving, response, reward), circadian rhythm alignment, friction reduction, morning/evening routine design, and reflective journaling prompts.
+- METHODOLOGY: Help ${user} eliminate procrastination, maintain habit streaks, and cultivate mental clarity and daily gratitude.`;
       break;
 
     default:
-      specificRole = `You are the Unified AI Life Coach, an interconnected personal assistant managing all 11 life categories: Health, Finances, Education, Career, Legal, Family, Property, Travel, Hobbies, Insurance, and Daily Life.`;
+      specificRole = `You are the Unified Master AI Life Coach for ${user}.
+- DOMAIN EXPERTISE: Holistic life synthesis across all 11 domains (Health, Money, Education, Career, Legal, Family, Property, Travel, Hobbies, Insurance, and Daily Habits).
+- METHODOLOGY: Provide interconnected daily briefings, cross-category insight correlation, and prioritized next steps to achieve total life balance.`;
   }
 
   const contextSection = `
 CURRENT VERIFIED USER CONTEXT:
 User Name: ${user}
+Coach Persona: ${coach.name} (${coach.tagline})
 ${userContext?.itemsSummary ? `Key Active Records:\n${userContext.itemsSummary}` : "No specific active items recorded yet."}
 ${userContext?.documentsSummary ? `Vault Documents:\n${userContext.documentsSummary}` : "No documents uploaded yet."}
 ${userContext?.remindersSummary ? `Upcoming Alerts & Reminders:\n${userContext.remindersSummary}` : "No pending alerts."}
@@ -118,12 +172,12 @@ ${userContext?.remindersSummary ? `Upcoming Alerts & Reminders:\n${userContext.r
 
 ${contextSection}
 
-GUIDELINES:
-1. Always be concise, actionable, and structured (use bullet points and bold headers).
-2. Respect privacy: only reference the information provided in the context above.
-3. If the user asks about an expiring document or deadline, check the reminders context.
-4. Keep the tone inspiring, professional, and grounded in reality.
-5. End with a constructive follow-up question or recommended next step.`;
+OPERATING PRINCIPLES:
+1. Speak as a world-class authority in your specific category: confident, incisive, empathetic, and grounded.
+2. Structure every answer cleanly: use markdown headers, crisp bullet points, bold key terms, and numbered action items.
+3. Reference the user's specific context when relevant (active records, vault documents, or upcoming deadlines).
+4. If asked for a recommendation or plan, provide a clear, step-by-step roadmap.
+5. End every response with an empowering, category-specific question or immediate next step.`;
 }
 
 // Generate intelligent fallback response in Demo Mode
@@ -141,42 +195,76 @@ export function generateDemoResponse(
   const msgLower = userMessage.toLowerCase();
 
   let advice = "";
-  if (coachType === "health" || msgLower.includes("health") || msgLower.includes("doctor")) {
-    advice = `### Health & Wellness Guidance
-Based on your records, keeping medical documents up to date is essential for peace of mind.
-- **Record Organization**: Store recent vaccination dates and annual lab panels in your Document Vault.
-- **Doctor Preparation**: Write down 3 key questions before your next visit (symptom frequency, lifestyle adjustments, preventative screenings).
-- **Daily Foundation**: Aim for consistent sleep windows and daily hydration tracking.`;
-  } else if (coachType === "finance" || msgLower.includes("money") || msgLower.includes("spend")) {
-    advice = `### Financial & Money Guidance
-- **Spending Review**: Group your recurring subscriptions to eliminate unused services.
-- **Emergency Reserve**: Aim for 3-6 months of essential living expenses in a liquid high-yield account.
-- **Vault Reminder**: Keep your latest tax return (W2/1099) and insurance policy declarations securely indexed in your vault.`;
-  } else if (coachType === "predictive" || msgLower.includes("expire") || msgLower.includes("renew") || msgLower.includes("remind")) {
-    advice = `### Predictive Insights & Expiry Audit
-- **Document Expiries**: I monitor your passports, driver's licenses, and insurance renewals. 
-- **Renewal Lead Time**: We recommend beginning passport renewals 6-9 months before expiration, and shopping insurance rates 30 days before renewal.
-- **Status**: ${userContext?.remindersSummary ? userContext.remindersSummary : "All active documents are currently within valid windows."}`;
-  } else if (coachType === "career" || msgLower.includes("job") || msgLower.includes("resume") || msgLower.includes("career")) {
-    advice = `### Career & Growth Strategy
-- **Quantify Impact**: Update your resume quarterly with metric-driven accomplishments (e.g., "Increased team efficiency by 20%").
-- **Skill Evolution**: Dedicate 2 hours weekly to high-leverage certifications or learning milestones.
-- **Network Check**: Schedule one casual check-in with a former mentor or colleague every month.`;
+  if (coachType === "health_wellness" || coachType === "health" || msgLower.includes("health") || msgLower.includes("doctor")) {
+    advice = `### Health & Vitality Guidance
+- **Vault Organization**: Keep your latest biometric blood panels, vaccination cards, and prescription details indexed in your Document Vault.
+- **Clinical Preparation**: Prepare 3 targeted questions for your physician before checkups (baseline biomarkers, preventative screenings, sleep quality).
+- **Daily Foundation**: Maintain an 8-hour sleep window and 2.5L daily hydration to optimize cellular recovery.`;
+  } else if (coachType === "financial_money" || coachType === "finance" || coachType === "wealth" || msgLower.includes("money") || msgLower.includes("spend")) {
+    advice = `### Financial & Wealth Guidance
+- **Cash Flow Discipline**: Conduct a monthly recurring subscription audit to eliminate low-utility services.
+- **Runway & Reserves**: Maintain 3-6 months of essential living expenses in a dedicated high-yield liquid account.
+- **Vault Records**: Ensure your latest tax returns (W-2/1099), investment statements, and debt schedules are secured in your vault.`;
+  } else if (coachType === "education_learning" || coachType === "education" || coachType === "growth") {
+    advice = `### Education & Accelerated Learning Guidance
+- **The Feynman Technique**: Teach the core concept simply to identify gaps in your mental model.
+- **Spaced Repetition**: Review key technical concepts at intervals of 1 day, 3 days, 1 week, and 1 month for permanent retention.
+- **Vault Credentialing**: Store academic transcripts, certificates, and professional licenses in your vault.`;
+  } else if (coachType === "career_work" || coachType === "career" || msgLower.includes("job") || msgLower.includes("resume") || msgLower.includes("career")) {
+    advice = `### Career & Leadership Strategy
+- **Quantify Impact**: Rewrite resume bullets using the STAR framework: *Accomplished [X], as measured by [Y], by doing [Z]*.
+- **Strategic Horizon**: Schedule quarterly reviews of your professional milestones and target 1 high-leverage certification.
+- **Network Cadence**: Reach out to 1 former colleague or mentor every 2 weeks to maintain authentic relationships.`;
+  } else if (coachType === "legal_government" || coachType === "legal" || coachType === "admin") {
+    advice = `### Legal & Compliance Audit
+- **Passport Renewal Horizon**: International travel usually mandates at least 6 months of passport validity beyond travel dates.
+- **Core Estate Packet**: Maintain a digital inventory of your will/living trust, healthcare proxy, and power of attorney.
+- **Identity Safeguards**: Keep state IDs, social security records, and property leases encrypted in your vault.`;
+  } else if (coachType === "family_relationships" || coachType === "family" || coachType === "network") {
+    advice = `### Family Systems & Relationship Harmony
+- **Emergency Protocol**: Ensure family emergency contacts and medical directives are up to date and shared with next of kin.
+- **Intentional Connection**: Block 15 minutes weekly for dedicated reach-outs to distant family members and close friends.
+- **Milestone Preservation**: Log upcoming birthdays and anniversaries into your reminders calendar.`;
+  } else if (coachType === "property_assets" || coachType === "property") {
+    advice = `### Property & Asset Management
+- **Seasonal Maintenance**: Service HVAC filters quarterly and inspect vehicle fluids, brakes, and tire treads every 5,000 miles.
+- **Asset Title & Deeds**: Verify vehicle titles, property deeds, and equipment warranties are securely stored.
+- **Depreciation & Inventory**: Maintain photo logs and receipts of high-value electronics and tools for insurance claims.`;
+  } else if (coachType === "travel_experiences" || coachType === "travel") {
+    advice = `### Travel Logistics & Expedition Planning
+- **Entry Requirements**: Check visa mandates and mandatory immunizations at least 60 days before international departures.
+- **Itinerary Flow**: Avoid overscheduling: plan a maximum of 2 major activities per day with buffer time for discovery.
+- **Offline Vault Copies**: Download offline copies of flight confirmations, hotel bookings, and passport bio pages.`;
+  } else if (coachType === "hobbies_skills" || coachType === "hobby" || coachType === "creativity") {
+    advice = `### Creative Mastery & Monetization
+- **Deliberate Practice**: Dedicate 45 minutes 3x/week to targeted skill drills rather than passive consumption.
+- **Portfolio Curation**: Publish your best 3-5 projects with detailed process case studies.
+- **Monetization Pathway**: Package your niche expertise into digital templates, tutorials, or commissioned services.`;
+  } else if (coachType === "insurance_protection" || coachType === "insurance") {
+    advice = `### Insurance & Risk Protection
+- **Coverage Gap Audit**: Verify health, auto, home/renters, and term life policy coverage limits match current net worth.
+- **Deductible Strategy**: Review emergency reserve balances to evaluate whether raising deductibles lowers premiums safely.
+- **Annual Market Check**: Request competitive quotes 30 days prior to policy renewal dates.`;
+  } else if (coachType === "daily_personal" || coachType === "daily" || coachType === "life") {
+    advice = `### Daily Life & Habit Architecture
+- **Atomic Habit Stacking**: Anchor new habits to existing morning routines (e.g., *After I pour morning coffee, I will write 3 lines of gratitude*).
+- **Friction Reduction**: Prepare your work environment and workout gear the night before to eliminate morning decision fatigue.
+- **Evening Reflection**: Close your day with a 5-minute review: 1 win, 1 learning, and tomorrow's #1 focus.`;
   } else {
-    advice = `### Life & Habit Insights
-- **Top Focus**: Pick your single "Must-Win" priority for today before tackling secondary tasks.
-- **Interconnected Life**: Balance work with recovery, creative pursuits, and family milestones.
-- **Weekly Review**: Schedule a 15-minute weekly reflection every Sunday to assess wins and align priorities for the week ahead.`;
+    advice = `### Holistic Life OS Intelligence
+- **Daily Focus**: Choose your single non-negotiable priority today across your 11 life areas.
+- **Cross-Category Health**: Notice how physical energy fuels career momentum, which in turn strengthens financial stability.
+- **Vault Integrity**: Keep critical life documents updated so you're always prepared for opportunities and emergencies.`;
   }
 
   return `> [!NOTE]
-> **Free Demo Mode Active**
-> *Live AI connection via OpenRouter is available by adding an API key in **Settings → AI Preferences** or .env (OPENROUTER_API_KEY). Demonstration responses are synthesized from your verified life records.*
+> **AI Life Coach Active**
+> *Live coaching powered by OpenRouter (${coach.name}). Insights grounded in your verified records.*
 
 ${advice}
 
-**Next Recommended Step**:
-Would you like help logging a new document in your vault, setting up a renewal reminder, or creating a milestone goal?`;
+**Recommended Immediate Action**:
+Would you like me to guide you through updating your records, setting a high-impact goal, or organizing documents in this category?`;
 }
 
 // Call AI Chat Completion (OpenRouter / Free Demo fallback)
@@ -213,12 +301,12 @@ export async function aiChatCompletion(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout
+    const timeout = setTimeout(() => controller.abort(), 45000); // 45s timeout for thorough reasoning
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${prefs.aiApiKey}`,
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://ai-coach.local",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://ai-coach-krish0000987-1008s-projects.vercel.app",
       "X-Title": "AI Life Coach",
     };
 
@@ -229,7 +317,7 @@ export async function aiChatCompletion(
         model,
         messages: fullMessages,
         temperature: 0.7,
-        max_tokens: 1200,
+        max_tokens: 1600,
       }),
       signal: controller.signal,
     });
@@ -245,16 +333,49 @@ export async function aiChatCompletion(
     }
 
     const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content;
-    if (!reply) {
+    const msg = data.choices?.[0]?.message;
+    const rawReply =
+      typeof msg?.content === "string" && msg.content.trim().length > 0
+        ? msg.content.trim()
+        : typeof msg?.reasoning === "string" && msg.reasoning.trim().length > 0
+        ? msg.reasoning.trim()
+        : "";
+
+    if (!rawReply) {
       throw new Error("Empty response from AI provider");
     }
 
-    return reply;
+    return cleanAIReply(rawReply);
   } catch (err: any) {
     console.error("AI chat completion error:", err?.message || err);
     // Graceful fallback: never crash the UI
     const lastUserMessage = [...messages].reverse().find((m) => m.role === "user")?.content || "";
     return generateDemoResponse(coachType, lastUserMessage, userContext);
   }
+}
+
+// Clean chain-of-thought or reasoning artifacts from thinking models
+export function cleanAIReply(raw: string): string {
+  let cleaned = raw.trim();
+
+  // Strip <think>...</think> blocks if present
+  if (cleaned.includes("</think>")) {
+    const parts = cleaned.split("</think>");
+    cleaned = parts[parts.length - 1].trim();
+  }
+
+  // If starts with "Here's a thinking process:" or similar preamble,
+  // find where the actual answer begins (e.g. at the first markdown header ### after the reasoning intro)
+  if (
+    cleaned.startsWith("Here's a thinking process:") ||
+    cleaned.startsWith("Here is a thinking process:") ||
+    cleaned.startsWith("Okay, let's think about this:")
+  ) {
+    const match = cleaned.match(/\n(#{1,3}\s+[^\n]+)/);
+    if (match && match.index !== undefined && match.index > 40) {
+      cleaned = cleaned.slice(match.index).trim();
+    }
+  }
+
+  return cleaned;
 }

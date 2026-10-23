@@ -55,6 +55,7 @@ interface LifeOSState {
   calendarLayerMode: "type" | "domain";
   journalEditId: string | null;
   activeCoachType: string;
+  initialCoachPrompt: string | null;
   vaultFilterCategory: string | null;
 
   setView: (v: ViewKey) => void;
@@ -68,7 +69,8 @@ interface LifeOSState {
   toggleLayer: (id: string) => void;
   setCalendarLayerMode: (m: "type" | "domain") => void;
   openJournalEditor: (id: string | null) => void;
-  openCoach: (coachType?: string) => void;
+  openCoach: (coachType?: string, prompt?: string | null) => void;
+  setInitialCoachPrompt: (p: string | null) => void;
   openVault: (category?: string | null) => void;
 }
 
@@ -84,6 +86,7 @@ export const useLifeOS = create<LifeOSState>((set) => ({
   calendarLayerMode: "type",
   journalEditId: null,
   activeCoachType: "unified",
+  initialCoachPrompt: null,
   vaultFilterCategory: null,
 
   setView: (v) => set({ view: v, selectedProjectId: null }),
@@ -102,6 +105,8 @@ export const useLifeOS = create<LifeOSState>((set) => ({
     })),
   setCalendarLayerMode: (m) => set({ calendarLayerMode: m, calendarLayers: [] }),
   openJournalEditor: (id) => set({ view: "journal", journalEditId: id, itemDetailId: null }),
-  openCoach: (coachType = "unified") => set({ view: "coaches", activeCoachType: coachType }),
+  openCoach: (coachType = "unified", prompt = null) =>
+    set({ view: "coaches", activeCoachType: coachType, initialCoachPrompt: prompt }),
+  setInitialCoachPrompt: (p) => set({ initialCoachPrompt: p }),
   openVault: (category = null) => set({ view: "vault", vaultFilterCategory: category }),
 }));

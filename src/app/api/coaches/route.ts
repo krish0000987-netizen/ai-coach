@@ -98,23 +98,48 @@ export async function POST(req: NextRequest) {
       take: 10,
     });
 
-    // 4. Fetch user context (active items, documents, upcoming expiries)
-    const [recentItems, recentDocs, pendingReminders, userRecord] = await Promise.all([
+    // 4. Fetch user context deeply grounded in this coach's category and life records
+    // Find domain record if applicable
+    const domainRecord = await db.domain.findFirst({
+      where: { key: coachType },
+      select: { id: true, name: true },
+    });
+
+    const [domainItems, domainDocs, generalItems, generalDocs, pendingReminders, userRecord] = await Promise.all([
+      domainRecord
+        ? db.item.findMany({
+            where: { userId: session.userId, domainId: domainRecord.id, status: "active" },
+            take: 8,
+            orderBy: { updatedAt: "desc" },
+            select: { type: true, title: true, dueDate: true, content: true },
+          })
+        : Promise.resolve([]),
+      coachType !== "unified"
+        ? db.document.findMany({
+            where: {
+              userId: session.userId,
+              OR: [{ category: coachType }, { category: { startsWith: coachType.slice(0, 5) } }],
+            },
+            take: 8,
+            orderBy: { createdAt: "desc" },
+            select: { title: true, category: true, documentType: true, expiryDate: true, aiSummary: true },
+          })
+        : Promise.resolve([]),
       db.item.findMany({
         where: { userId: session.userId, status: "active" },
         take: 5,
         orderBy: { updatedAt: "desc" },
-        select: { type: true, title: true, dueDate: true },
+        select: { type: true, title: true, dueDate: true, content: true },
       }),
       db.document.findMany({
         where: { userId: session.userId },
-        take: 5,
+        take: 6,
         orderBy: { createdAt: "desc" },
-        select: { title: true, category: true, documentType: true, expiryDate: true },
+        select: { title: true, category: true, documentType: true, expiryDate: true, aiSummary: true },
       }),
       db.reminder.findMany({
         where: { userId: session.userId, status: "pending" },
-        take: 5,
+        take: 6,
         orderBy: { remindAt: "asc" },
         select: { title: true, type: true, dueDate: true },
       }),
@@ -124,12 +149,16 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    const itemsSummary = recentItems
-      .map((i) => `• [${i.type}] ${i.title}${i.dueDate ? ` (Due: ${new Date(i.dueDate).toLocaleDateString()})` : ""}`)
+    // Format category-focused records first, then general records
+    const finalItems = domainItems.length > 0 ? domainItems : generalItems;
+    const finalDocs = domainDocs.length > 0 ? domainDocs : generalDocs;
+
+    const itemsSummary = finalItems
+      .map((i) => `• [${i.type.toUpperCase()}] ${i.title}${i.dueDate ? ` (Target: ${new Date(i.dueDate).toLocaleDateString()})` : ""}${i.content ? ` - ${i.content.slice(0, 60)}` : ""}`)
       .join("\n");
 
-    const documentsSummary = recentDocs
-      .map((d) => `• [${d.category}] ${d.title} (${d.documentType})${d.expiryDate ? ` - Expires: ${new Date(d.expiryDate).toLocaleDateString()}` : ""}`)
+    const documentsSummary = finalDocs
+      .map((d) => `• [${d.category}] ${d.title} (${d.documentType})${d.expiryDate ? ` [Expires: ${new Date(d.expiryDate).toLocaleDateString()}]` : ""}${d.aiSummary ? ` - Summary: ${d.aiSummary.slice(0, 80)}` : ""}`)
       .join("\n");
 
     const remindersSummary = pendingReminders

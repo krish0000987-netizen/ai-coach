@@ -17,7 +17,7 @@ interface Message {
 }
 
 export function CoachesView() {
-  const { activeCoachType, openCoach, setView } = useLifeOS();
+  const { activeCoachType, openCoach, setView, initialCoachPrompt, setInitialCoachPrompt } = useLifeOS();
   const [currentCoachType, setCurrentCoachType] = useState(activeCoachType || "unified");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -60,6 +60,17 @@ export function CoachesView() {
     }
     loadConversation();
   }, [currentCoachType]);
+
+  // Handle incoming initial coach prompt from Category Dashboards
+  useEffect(() => {
+    if (initialCoachPrompt) {
+      const promptText = initialCoachPrompt;
+      setInitialCoachPrompt(null);
+      setTimeout(() => {
+        sendMessage(promptText);
+      }, 350);
+    }
+  }, [initialCoachPrompt]);
 
   // Scroll to bottom when messages update
   useEffect(() => {
