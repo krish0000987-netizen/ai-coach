@@ -18,7 +18,7 @@ import { useState } from "react";
 
 const CORE_NAV = [
   { key: "dashboard", name: "Dashboard", icon: "LayoutDashboard" },
-  { key: "coaches", name: "6 AI Coaches", icon: "Sparkles", highlight: true },
+  { key: "coaches", name: "11 AI Life Coaches", icon: "Sparkles", highlight: true },
   { key: "vault", name: "Document Vault", icon: "ShieldCheck" },
   { key: "reminders", name: "Alerts & Expiries", icon: "BellRing" },
   { key: "timeline", name: "Life Timeline", icon: "Milestone" },

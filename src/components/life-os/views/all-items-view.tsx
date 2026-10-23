@@ -146,7 +146,7 @@ export function AllItemsView() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-foreground leading-snug">AI Life Coach Intelligence Hub</h4>
-                <p className="text-xs text-muted-foreground">Your items are interconnected with 6 AI Coaches and your private Document Vault.</p>
+                <p className="text-xs text-muted-foreground">Your items are interconnected with 11 AI Life Coaches and your private Document Vault.</p>
               </div>
             </div>
 

@@ -39,7 +39,8 @@ export function DomainView({ domainKey }: { domainKey: string }) {
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         if (isMounted) {
-          setVaultDocs(Array.isArray(data) ? data : []);
+          const docs = Array.isArray(data) ? data : data?.documents || [];
+          setVaultDocs(Array.isArray(docs) ? docs : []);
           setDocsLoading(false);
         }
       })

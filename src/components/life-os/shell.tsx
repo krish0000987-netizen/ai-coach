@@ -105,7 +105,7 @@ export function Shell() {
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
         <Topbar />
         <main
           className={cn(
@@ -115,10 +115,10 @@ export function Shell() {
         >
           <div
             className={cn(
-              "mx-auto w-full flex-1 flex flex-col min-h-0",
+              "mx-auto w-full flex-1 flex flex-col",
               isFullHeightView
-                ? "max-w-7xl h-full p-2 sm:p-4 lg:p-6"
-                : "max-w-6xl px-4 py-6 sm:px-6 lg:px-8 min-h-[calc(100vh-9rem)]"
+                ? "max-w-7xl h-full p-2 sm:p-4 lg:p-6 min-h-0"
+                : "max-w-6xl px-4 py-6 sm:px-6 lg:px-8"
             )}
           >
             <AnimatePresence mode="wait">
@@ -128,15 +128,18 @@ export function Shell() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.18 }}
-                className={cn("flex-1 flex flex-col min-h-0", isFullHeightView && "h-full")}
+                className={cn("w-full flex-1 flex flex-col", isFullHeightView && "h-full min-h-0")}
               >
                 <ViewSwitcher view={view} />
               </motion.div>
             </AnimatePresence>
+
+            {!isFullHeightView && (
+              <div className="mt-12">
+                <Footer onQuickCapture={() => setQuickCaptureOpen(true)} onCommand={() => setCommandOpen(true)} />
+              </div>
+            )}
           </div>
-          {!isFullHeightView && (
-            <Footer onQuickCapture={() => setQuickCaptureOpen(true)} onCommand={() => setCommandOpen(true)} />
-          )}
         </main>
       </div>
 
