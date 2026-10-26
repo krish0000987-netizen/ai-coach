@@ -161,6 +161,33 @@ export async function seedDatabase(targetUserId?: string) {
   const sampleItems = [
     // 1. Health & Wellness
     {
+      type: "document",
+      title: "Blood Test Results",
+      content: "Uploaded blood test reports filed under Health category. Contains full blood panel results.",
+      domainId: dmap.health_wellness,
+      userId,
+      status: "active",
+      metadata: {
+        attachments: [
+          { name: "Blood Test Report 1", url: "#", size: 1024 * 512, type: "application/pdf" },
+          { name: "Blood Test Report 2", url: "#", size: 1024 * 384, type: "application/pdf" },
+        ],
+      },
+    },
+    {
+      type: "document",
+      title: "Blood report summary",
+      content: "Comprehensive metabolic panel, lipid profile, and vitamin D levels checked. All metrics optimal.",
+      domainId: dmap.health_wellness,
+      userId,
+      status: "active",
+      metadata: {
+        attachments: [
+          { name: "Full Panel Lab Results", url: "#", size: 1024 * 720, type: "application/pdf" },
+        ],
+      },
+    },
+    {
       type: "milestone",
       title: "Annual Physical & Comprehensive Blood Panel",
       content: "Complete metabolic panel, lipid profile, and vitamin D levels checked. All metrics optimal.",
@@ -286,6 +313,38 @@ export async function seedDatabase(targetUserId?: string) {
     },
 
     // 6. Family & Relationships
+    {
+      type: "note",
+      title: "Manjari Sethi",
+      content: "Married in 2010. Met through sister Sanah's college friend. Previously divorced, Shiv was upset before meeting Manjari.",
+      domainId: dmap.family_relationships,
+      userId,
+      status: "active",
+    },
+    {
+      type: "note",
+      title: "Aryen & Vhan Sethi",
+      content: "Twin boys.",
+      domainId: dmap.family_relationships,
+      userId,
+      status: "active",
+    },
+    {
+      type: "note",
+      title: "Dhruv Sethi",
+      content: "Age 44. Handles production side of Radium Creation. Owns 11% shares. Dependent on father for salary.",
+      domainId: dmap.family_relationships,
+      userId,
+      status: "active",
+    },
+    {
+      type: "note",
+      title: "Sanah Sethi",
+      content: "Sister. Introduced Manjari through college friends network.",
+      domainId: dmap.family_relationships,
+      userId,
+      status: "active",
+    },
     {
       type: "contact",
       title: "Elena Morgan (Spouse)",

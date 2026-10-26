@@ -528,36 +528,35 @@ export default function LandingPage() {
       <section id="domains" className="scroll-mt-24 border-y border-border/40 bg-muted/20 py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-16 text-center">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Eight domains. One system.</h2>
+            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">11 Life Categories. One Connected Life Book.</h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              Each domain has its own smart widget — purpose-built for that part of your life.
+              Every part of your life has a dedicated pastel card, file vault, and specialized AI coach.
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
-              { icon: Compass, color: "#a78bfa", name: "Mind & Soul", desc: "Values, visions, affirmations, breathing exercises" },
-              { icon: Calendar, color: "#f59e0b", name: "Time & Action", desc: "Tasks, habits, routines, today's focus" },
-              { icon: Heart, color: "#f43f5e", name: "Health & Body", desc: "Symptoms, medications, appointments, vitals" },
-              { icon: Wallet, color: "#10b981", name: "Wealth & Career", desc: "Income, expenses, subscriptions, savings goals" },
-              { icon: Users, color: "#06b6d4", name: "Network", desc: "Contacts, follow-ups, birthdays, relationships" },
-              { icon: BookOpen, color: "#3b82f6", name: "Growth", desc: "Reading list, courses, skills, takeaways" },
-              { icon: Palette, color: "#ec4899", name: "Creativity & Joy", desc: "Ideas, media log, bucket list, events" },
-              { icon: Home, color: "#71717a", name: "Admin", desc: "Documents, home maintenance, grocery lists" },
+              { emoji: "❤️", name: "Health", desc: "Medical records, blood reports, prescriptions, appointments" },
+              { emoji: "⚖️", name: "Legal", desc: "Passports, IDs, contracts, wills, government notices" },
+              { emoji: "💰", name: "Finance", desc: "Income, expenses, investments, bills, statements" },
+              { emoji: "🎨", name: "Interests", desc: "Creative projects, art, hobbies, practice logs" },
+              { emoji: "📄", name: "Personal Documents", desc: "Vital certificates, IDs, and personal records" },
+              { emoji: "✈️", name: "Travel", desc: "Trips, visas, flight bookings, itineraries, bucket list" },
+              { emoji: "🎓", name: "Education", desc: "Degrees, certificates, courses, study notes" },
+              { emoji: "💼", name: "Career", desc: "Employment, CV, achievements, performance reviews" },
+              { emoji: "👨‍👩‍👦", name: "Family", desc: "Family tree, emergency contacts, birthdays, notes" },
+              { emoji: "🏠", name: "Property", desc: "Deeds, home maintenance, vehicle registration" },
+              { emoji: "🛡️", name: "Insurance", desc: "Health, auto, home policies, claims, renewals" },
             ].map((d) => (
               <div
                 key={d.name}
-                className="group rounded-2xl border border-border/60 bg-card/50 p-5 transition-all hover:shadow-md"
-                style={{ borderColor: `${d.color}30` }}
+                className="group rounded-3xl border border-stone-200/70 dark:border-zinc-800 bg-card p-5 text-center transition-all hover:shadow-md hover:-translate-y-0.5"
               >
-                <div
-                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ background: `${d.color}18`, color: d.color }}
-                >
-                  <d.icon className="h-5 w-5" />
+                <div className="mb-3 mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-2xl bg-muted/50 shadow-xs">
+                  {d.emoji}
                 </div>
-                <h3 className="text-sm font-semibold" style={{ color: d.color }}>{d.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">{d.desc}</p>
+                <h3 className="text-sm font-bold text-foreground">{d.name}</h3>
+                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{d.desc}</p>
               </div>
             ))}
           </div>

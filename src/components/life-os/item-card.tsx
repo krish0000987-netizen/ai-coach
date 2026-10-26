@@ -132,11 +132,22 @@ export function ItemCard({ item, onClick, compact, showProject, className }: Ite
               {item.metadata.kind === "income" ? "+" : "−"}${Number(item.metadata.amount).toLocaleString()}
             </span>
           )}
-          {item.metadata?.rating && (
-            <span className="inline-flex items-center gap-0.5 text-[11px] text-amber-500">
-              <Icon name="Star" className="h-3 w-3 fill-amber-400 text-amber-400" />
-              {item.metadata.rating}
-            </span>
+          {item.metadata?.attachments?.length > 0 && (
+            <div className="mt-2.5 flex flex-wrap gap-1.5 pt-2 border-t border-border/40">
+              {item.metadata.attachments.map((att: any, i: number) => (
+                <a
+                  key={i}
+                  href={att.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-[11px] font-semibold text-foreground hover:text-[#FF4D6D] transition-colors"
+                >
+                  <span className="text-[#FF4D6D]">📎</span>
+                  <span className="truncate max-w-[180px]">{att.name}</span>
+                </a>
+              ))}
+            </div>
           )}
         </div>
       </div>

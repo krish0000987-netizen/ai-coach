@@ -17,10 +17,11 @@ import {
 import { useState } from "react";
 
 const CORE_NAV = [
-  { key: "dashboard", name: "Dashboard", icon: "LayoutDashboard" },
-  { key: "coaches", name: "11 AI Life Coaches", icon: "Sparkles", highlight: true },
+  { key: "lifebook", name: "Life Book", icon: "BookOpen", highlight: true },
+  { key: "reminders", name: "Alerts & Reminders", icon: "BellRing" },
   { key: "vault", name: "Document Vault", icon: "ShieldCheck" },
-  { key: "reminders", name: "Alerts & Expiries", icon: "BellRing" },
+  { key: "coaches", name: "11 AI Coaches", icon: "Sparkles" },
+  { key: "analytics", name: "Analytics & Trends", icon: "LayoutDashboard" },
   { key: "timeline", name: "Life Timeline", icon: "Milestone" },
   { key: "family", name: "Family Workspace", icon: "Users" },
 ] as const;
@@ -157,14 +158,26 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={() => nav(d.key)}
                 className={cn(
                   "group flex w-full items-center gap-2.5 rounded-xl px-3 py-1.5 text-xs transition-all",
-                  active ? "bg-sidebar-accent text-foreground font-semibold" : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+                  active
+                    ? "bg-sidebar-accent text-foreground font-bold shadow-2xs"
+                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
                 )}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-md text-[11px]" style={{ background: `${d.color}18`, color: d.color }}>
-                  <Icon name={d.icon} className="h-3 w-3" />
+                <span
+                  className="flex h-5 w-5 items-center justify-center rounded-md text-xs"
+                  style={{ background: d.bgSoft }}
+                >
+                  {d.emoji}
                 </span>
                 <span className="flex-1 truncate text-left text-[12px]">{d.short}</span>
-                {count ? <span className="text-[10px] text-muted-foreground/60">{count}</span> : null}
+                {count ? (
+                  <span
+                    className="px-1.5 py-0.2 rounded-full text-[10px] font-semibold"
+                    style={{ background: d.badgeBg, color: d.badgeText }}
+                  >
+                    {count}
+                  </span>
+                ) : null}
               </button>
             );
           })}

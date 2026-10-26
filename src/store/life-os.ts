@@ -3,6 +3,7 @@
 import { create } from "zustand";
 
 export type ViewKey =
+  | "lifebook"
   | "dashboard"
   | "coaches"
   | "vault"
@@ -75,7 +76,7 @@ interface LifeOSState {
 }
 
 export const useLifeOS = create<LifeOSState>((set) => ({
-  view: "dashboard",
+  view: "lifebook",
   selectedProjectId: null,
   quickCaptureOpen: false,
   itemDetailId: null,

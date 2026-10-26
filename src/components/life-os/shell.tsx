@@ -11,6 +11,7 @@ import { ShortcutsHelp } from "./shortcuts-help";
 import { NotificationManager } from "./notifications";
 import { OnboardingFlow } from "./onboarding-flow";
 import { ViewErrorBoundary } from "./error-boundary";
+import { LifeBookGrid } from "./views/life-book-grid";
 import { DashboardView } from "./views/dashboard-view";
 import { VaultView } from "./views/vault-view";
 import { CoachesView } from "./views/coaches-view";
@@ -169,7 +170,8 @@ export function Shell() {
 }
 
 function ViewSwitcher({ view }: { view: string }) {
-  if (view === "dashboard") return <DashboardView />;
+  if (view === "lifebook" || view === "dashboard") return <LifeBookGrid />;
+  if (view === "analytics") return <DashboardView />;
   if (view === "vault") return <VaultView />;
   if (view === "coaches") return <CoachesView />;
   if (view === "reminders") return <RemindersView />;

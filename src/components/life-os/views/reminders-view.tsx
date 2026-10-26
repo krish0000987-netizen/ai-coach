@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useLifeOS } from "@/store/life-os";
-import { DOMAIN_MAP } from "@/lib/constants";
+import { DOMAINS, DOMAIN_MAP } from "@/lib/constants";
 import { Icon } from "../icon";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { AddReminderModal } from "../add-reminder-modal";
 
 export function RemindersView() {
-  const { openVault, openItemDetail, openCoach } = useLifeOS();
+  const { openVault, openItemDetail, setView } = useLifeOS();
   const [data, setData] = useState<{
     all: any[];
     overdue: any[];
@@ -28,6 +29,8 @@ export function RemindersView() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "overdue" | "dueSoon" | "upcoming" | "completed">("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [addReminderOpen, setAddReminderOpen] = useState(false);
 
   async function loadReminders() {
     setLoading(true);
@@ -101,7 +104,7 @@ export function RemindersView() {
     }
   }
 
-  const currentList =
+  const baseList =
     activeTab === "all"
       ? data.all
       : activeTab === "overdue"
@@ -112,232 +115,308 @@ export function RemindersView() {
       ? data.upcoming
       : data.completed;
 
+  const currentList = baseList.filter((item) => {
+    if (selectedCategory === "all") return true;
+    return item.category === selectedCategory;
+  });
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
-              <Icon name="BellRing" className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Predictive Alerts & Reminders</h1>
-              <p className="text-sm text-muted-foreground">
-                Deterministic date auditing for passport expiries, insurance renewals, and wellness milestones.
+    <div className="space-y-6 pb-28 max-w-4xl mx-auto px-2 sm:px-4">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl border border-stone-200/70 dark:border-zinc-800 bg-gradient-to-r from-amber-100/60 via-orange-50/40 to-rose-100/30 dark:from-zinc-900 dark:via-zinc-900/90 dark:to-zinc-800 p-6 sm:p-7 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 text-xs font-bold">
+                🔔
+              </span>
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-600">
+                Predictive Alerts
               </p>
             </div>
+            <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
+              Reminders & Expiries
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-stone-600 dark:text-stone-400">
+              Deterministic date auditing for passport expiries, renewals, and wellness checkups.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setAddReminderOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-[#FF4D6D] hover:bg-[#FF3358] px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              <Icon name="Plus" className="h-4 w-4" strokeWidth={3} />
+              <span>+ Add Reminder</span>
+            </button>
+
+            <button
+              onClick={runPredictiveScan}
+              disabled={scanning}
+              className="inline-flex items-center gap-2 rounded-full border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs font-bold text-stone-700 dark:text-stone-200 hover:bg-stone-50 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {scanning ? (
+                <>
+                  <Icon name="Loader2" className="h-3.5 w-3.5 animate-spin" />
+                  <span>Auditing...</span>
+                </>
+              ) : (
+                <>
+                  <Icon name="Sparkles" className="h-3.5 w-3.5 text-amber-500" />
+                  <span>Audit Expiries</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
-
-        <button
-          onClick={runPredictiveScan}
-          disabled={scanning}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-95 disabled:opacity-50"
-        >
-          {scanning ? (
-            <>
-              <Icon name="Loader2" className="h-4 w-4 animate-spin" />
-              Scanning Records…
-            </>
-          ) : (
-            <>
-              <Icon name="Sparkles" className="h-4 w-4" />
-              Run Predictive Audit
-            </>
-          )}
-        </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-border/40 pb-2">
+      {/* Top Stat Ribbon */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <button
           onClick={() => setActiveTab("all")}
           className={cn(
-            "rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors",
-            activeTab === "all" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
+            "p-3.5 rounded-2xl border text-left transition-all",
+            activeTab === "all"
+              ? "border-[#FF4D6D] bg-[#FF4D6D]/10 text-foreground"
+              : "border-stone-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-stone-600 hover:border-stone-300"
           )}
         >
-          All Alerts ({data.stats?.total || 0})
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Alerts</span>
+          <p className="text-xl font-extrabold text-foreground mt-0.5">{data.stats?.total || 0}</p>
         </button>
 
         <button
           onClick={() => setActiveTab("overdue")}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors",
-            activeTab === "overdue" ? "bg-rose-600 text-white" : "text-muted-foreground hover:bg-muted"
+            "p-3.5 rounded-2xl border text-left transition-all",
+            activeTab === "overdue"
+              ? "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold"
+              : "border-stone-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-stone-600 hover:border-stone-300"
           )}
         >
-          <span>Overdue</span>
-          {data.stats?.overdueCount > 0 && (
-            <span className="rounded-full bg-rose-500/20 px-1.5 py-0.2 text-[10px] font-bold">
-              {data.stats.overdueCount}
-            </span>
-          )}
+          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">Overdue</span>
+          <p className="text-xl font-extrabold text-rose-600 mt-0.5">{data.stats?.overdueCount || 0}</p>
         </button>
 
         <button
           onClick={() => setActiveTab("dueSoon")}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors",
-            activeTab === "dueSoon" ? "bg-amber-600 text-white" : "text-muted-foreground hover:bg-muted"
+            "p-3.5 rounded-2xl border text-left transition-all",
+            activeTab === "dueSoon"
+              ? "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold"
+              : "border-stone-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-stone-600 hover:border-stone-300"
           )}
         >
-          <span>Due in 7 Days</span>
-          {data.stats?.dueSoonCount > 0 && (
-            <span className="rounded-full bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold">
-              {data.stats.dueSoonCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("upcoming")}
-          className={cn(
-            "rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors",
-            activeTab === "upcoming" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
-          )}
-        >
-          Upcoming ({data.upcoming?.length || 0})
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">Due in 7 Days</span>
+          <p className="text-xl font-extrabold text-amber-600 mt-0.5">{data.stats?.dueSoonCount || 0}</p>
         </button>
 
         <button
           onClick={() => setActiveTab("completed")}
           className={cn(
-            "rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors",
-            activeTab === "completed" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
+            "p-3.5 rounded-2xl border text-left transition-all",
+            activeTab === "completed"
+              ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold"
+              : "border-stone-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-stone-600 hover:border-stone-300"
           )}
         >
-          Completed ({data.stats?.completedCount || 0})
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Completed</span>
+          <p className="text-xl font-extrabold text-emerald-600 mt-0.5">{data.stats?.completedCount || 0}</p>
         </button>
       </div>
 
-      {/* Reminder Cards */}
+      {/* Category Filter Chips */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          onClick={() => setSelectedCategory("all")}
+          className={cn(
+            "px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border whitespace-nowrap cursor-pointer",
+            selectedCategory === "all"
+              ? "bg-stone-900 text-white dark:bg-white dark:text-stone-900 border-transparent shadow-xs"
+              : "bg-white dark:bg-zinc-900 border-stone-200/80 dark:border-zinc-800 text-stone-600 hover:bg-stone-100"
+          )}
+        >
+          All Categories
+        </button>
+        {DOMAINS.map((dom) => {
+          const isSelected = selectedCategory === dom.key;
+          return (
+            <button
+              key={dom.key}
+              onClick={() => setSelectedCategory(dom.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border whitespace-nowrap cursor-pointer",
+                isSelected
+                  ? "border-[#FF4D6D] bg-[#FF4D6D]/15 text-[#FF4D6D] font-bold"
+                  : "bg-white dark:bg-zinc-900 border-stone-200/80 dark:border-zinc-800 text-stone-600 hover:bg-stone-100"
+              )}
+            >
+              <span>{dom.emoji}</span>
+              <span>{dom.short}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Reminders List */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl border border-border/40 bg-muted/30" />
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-28 rounded-3xl bg-stone-100 dark:bg-zinc-800 animate-pulse" />
           ))}
         </div>
       ) : currentList.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card/30 p-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
-            <Icon name="CheckCheck" className="h-6 w-6" />
+        <div className="rounded-3xl border border-dashed border-stone-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/40 p-10 text-center space-y-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 text-2xl mx-auto">
+            🔔
           </div>
-          <h3 className="mt-4 text-base font-semibold">No alerts in this category</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            You're completely on top of your deadlines! Click "Run Predictive Audit" anytime to check your records.
+          <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
+            No reminders in this view
+          </h3>
+          <p className="text-xs text-stone-500 max-w-sm mx-auto">
+            You're all caught up! Click below to create a custom reminder for any medical checkup, bill, or passport expiry.
           </p>
+          <div className="pt-2">
+            <button
+              onClick={() => setAddReminderOpen(true)}
+              className="px-6 py-2.5 rounded-full bg-[#FF4D6D] text-white text-xs font-bold shadow-md hover:bg-[#FF3358] cursor-pointer"
+            >
+              + Create Reminder
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
           {currentList.map((rem) => {
-            const domain = rem.category ? DOMAIN_MAP[rem.category] : null;
-            const now = new Date();
+            const isCompleted = rem.status === "completed";
             const remindDate = new Date(rem.remindAt);
-            const isOverdue = remindDate < now && rem.status === "pending";
+            const now = new Date();
+            const isOverdue = !isCompleted && remindDate < now;
+            const diffDays = Math.round((remindDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const catMeta = DOMAIN_MAP[rem.category] || DOMAINS[0];
 
             return (
               <motion.div
                 key={rem.id}
-                initial={{ opacity: 0, y: 4 }}
+                layout
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                  "flex flex-col justify-between gap-4 rounded-2xl border p-4.5 shadow-xs transition-all sm:flex-row sm:items-center",
-                  isOverdue
-                    ? "border-rose-500/30 bg-rose-500/5 hover:border-rose-500/50"
-                    : rem.status === "completed"
-                    ? "border-border/40 bg-muted/20 opacity-70"
-                    : "border-border/60 bg-card hover:border-amber-500/40"
+                  "rounded-3xl border border-stone-200/70 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+                  isCompleted && "opacity-60 bg-stone-50/50"
                 )}
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    {domain && (
-                      <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
-                        style={{ background: `${domain.color}20`, color: domain.color }}
-                      >
-                        {domain.short}
-                      </span>
+                <div className="flex items-start gap-3.5 min-w-0">
+                  {/* Complete checkmark toggle */}
+                  <button
+                    onClick={() => handleAction(rem.id, isCompleted ? "dismiss" : "complete")}
+                    className={cn(
+                      "mt-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all flex-shrink-0 cursor-pointer",
+                      isCompleted
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : "border-stone-300 dark:border-zinc-600 hover:border-[#FF4D6D] text-transparent hover:text-stone-400"
                     )}
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                        isOverdue
-                          ? "bg-rose-500/20 text-rose-600"
-                          : rem.type === "expiry"
-                          ? "bg-amber-500/20 text-amber-600"
-                          : "bg-indigo-500/20 text-indigo-600"
-                      )}
-                    >
-                      {rem.type.replace(/_/g, " ")}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Remind: {new Date(rem.remindAt).toLocaleDateString()}
-                    </span>
-                  </div>
+                    aria-label="Toggle completed"
+                  >
+                    <Icon name="Check" className="h-4 w-4 stroke-[3]" />
+                  </button>
 
-                  <h3 className={cn("text-sm font-semibold tracking-tight", rem.status === "completed" && "line-through text-muted-foreground")}>
-                    {rem.title}
-                  </h3>
-
-                  {rem.description && (
-                    <p className="text-xs text-muted-foreground max-w-2xl">{rem.description}</p>
-                  )}
-
-                  {/* Linked document / item metadata */}
-                  {rem.document && (
-                    <div className="flex items-center gap-1.5 pt-1 text-xs text-indigo-600 dark:text-indigo-400">
-                      <Icon name="FileText" className="h-3.5 w-3.5" />
-                      <span>Linked Vault Document: {rem.document.title}</span>
-                      <button
-                        onClick={() => openVault(rem.document.category)}
-                        className="ml-1 underline font-medium hover:text-indigo-700"
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3
+                        className={cn(
+                          "text-base font-bold text-stone-900 dark:text-stone-100",
+                          isCompleted && "line-through text-stone-400"
+                        )}
                       >
-                        View in Vault
-                      </button>
+                        {rem.title}
+                      </h3>
+
+                      {catMeta && (
+                        <span
+                          className="px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1"
+                          style={{ background: catMeta.badgeBg, color: catMeta.badgeText }}
+                        >
+                          <span>{catMeta.emoji}</span>
+                          <span>{catMeta.short}</span>
+                        </span>
+                      )}
+
+                      {isOverdue && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-50 text-rose-600 border border-rose-200 animate-pulse">
+                          Overdue
+                        </span>
+                      )}
                     </div>
-                  )}
+
+                    {rem.description && (
+                      <p className="mt-1 text-xs text-stone-600 dark:text-stone-400 line-clamp-2">
+                        {rem.description}
+                      </p>
+                    )}
+
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-stone-500">
+                      <span className="inline-flex items-center gap-1 font-semibold text-stone-700 dark:text-stone-300">
+                        <Icon name="CalendarClock" className="h-3.5 w-3.5 text-stone-400" />
+                        <span>
+                          {remindDate.toLocaleDateString(undefined, {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                        <span>·</span>
+                        <span>
+                          {isCompleted
+                            ? "Completed"
+                            : isOverdue
+                            ? `${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? "" : "s"} overdue`
+                            : diffDays === 0
+                            ? "Due today"
+                            : `In ${diffDays} day${diffDays === 1 ? "" : "s"}`}
+                        </span>
+                      </span>
+
+                      {rem.document && (
+                        <button
+                          onClick={() => openVault(rem.category)}
+                          className="inline-flex items-center gap-1 text-[#FF4D6D] hover:underline"
+                        >
+                          <Icon name="Paperclip" className="h-3 w-3" />
+                          <span>Linked Document</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {rem.status !== "completed" && (
-                    <>
+                {/* Right Action Buttons */}
+                <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                  {!isCompleted && (
+                    <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => handleAction(rem.id, "complete")}
-                        className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700"
+                        onClick={() => handleAction(rem.id, "snooze", 1)}
+                        className="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 shadow-2xs"
+                        title="Snooze 1 day"
                       >
-                        <Icon name="Check" className="h-3.5 w-3.5" />
-                        Complete
+                        +1 Day
                       </button>
-
-                      <div className="relative group">
-                        <button
-                          onClick={() => handleAction(rem.id, "snooze", 3)}
-                          className="inline-flex items-center gap-1 rounded-xl border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
-                          title="Snooze 3 days"
-                        >
-                          <Icon name="Clock" className="h-3.5 w-3.5" />
-                          Snooze
-                        </button>
-                      </div>
-
                       <button
-                        onClick={() => openCoach(domain?.coachType || "predictive")}
-                        className="rounded-xl border border-border p-1.5 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
-                        title="Consult Predictive Coach"
+                        onClick={() => handleAction(rem.id, "snooze", 7)}
+                        className="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-50 shadow-2xs"
+                        title="Snooze 1 week"
                       >
-                        <Icon name="Sparkles" className="h-4 w-4" />
+                        +1 Wk
                       </button>
-                    </>
+                    </div>
                   )}
 
                   <button
                     onClick={() => handleDelete(rem.id)}
-                    className="rounded-xl border border-border p-1.5 text-muted-foreground hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40"
-                    title="Dismiss / Delete"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors"
+                    title="Delete Reminder"
                   >
                     <Icon name="Trash2" className="h-4 w-4" />
                   </button>
@@ -347,6 +426,14 @@ export function RemindersView() {
           })}
         </div>
       )}
+
+      {/* Add Reminder Modal */}
+      <AddReminderModal
+        open={addReminderOpen}
+        onOpenChange={setAddReminderOpen}
+        defaultCategory={selectedCategory !== "all" ? selectedCategory : "health_wellness"}
+        onSuccess={loadReminders}
+      />
     </div>
   );
 }
